@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FARS Admin Dashboard</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header>
+    <h1>FARS — Fully Automated Robotic Systems</h1>
+    <p class="subtitle">Campus security and operations — live simulation</p>
+    <span id="status" class="badge">Connecting</span>
+  </header>
+
+  <main class="grid">
+    <section class="card metrics">
+      <h2>Analytics</h2>
+      <div id="metrics-grid"></div>
+    </section>
+
+    <section class="card">
+      <h2>IoT Devices</h2>
+      <ul id="devices-list"></ul>
+    </section>
+
+    <section class="card">
+      <h2>Recent Attendance</h2>
+      <ul id="attendance-list"></ul>
+    </section>
+
+    <section class="card">
+      <h2>Access Log</h2>
+      <ul id="access-list"></ul>
+    </section>
+
+    <section class="card wide">
+      <h2>System Events</h2>
+      <ul id="events-list"></ul>
+    </section>
+
+    <section class="card controls">
+      <h2>Command Center</h2>
+      <div class="row">
+        <input id="cmd-input" type="text" placeholder="e.g. deliver medicine to room 7" />
+        <button id="cmd-btn">Send to robots</button>
+      </div>
+      <div class="row">
+        <input id="voice-input" type="text" placeholder="Voice command (simulated)" />
+        <button id="voice-btn">Voice</button>
+        <button id="scan-btn">Trigger face scan</button>
+      </div>
+      <p id="feedback"></p>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

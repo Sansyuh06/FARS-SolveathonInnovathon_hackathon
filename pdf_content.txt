@@ -1,0 +1,261 @@
+SUBJECTSUBJECTSUBJECT CODECODECODE
+TYPETYPETYPE THETHETHE SUBJECTSUBJECTSUBJECT NAMENAMENAME HEREHEREHERE
+II     III
+LIVE -IN-LAB PROJECT 
+WORKSOLVEATHON
+Reg.Number : 1. 412414921042   
+   2.412414921004
+   3. 412414921039
+   
+Name :  1. ROHITH VIJAY R
+          2. AKASH SANTHNU SUNDAR
+                               3. PUNEETESHWAAR S P
+    Project Title :  FULLY AUTOMATED ROBOTIC SYSTEMS
+GUIDE NAME : Dr. P . Rayavel
+
+FULLY AUTOMATED ROBOTIC SYSTEMS
+DOMAIN : MACHINE LEARNING AND ROBOTICS
+JUSTIFICATION FOR SDG & SAP No.
+SDG  9: Industry, Innovation, and Infrastructure :
+•Objective : Foster innovation and build resilient infrastructure.
+•Impact : Developing a robot that integrates advanced technologies like AI and IoT contributes to innovation.
+          It supports the creation of smart classrooms and workplaces, promoting technological advancement and       
+efficiency.
+SDG  16: Peace, Justice, and Strong Institutions :
+•Objective : Promote transparent and accountable institutions.
+•Impact : An automated logging system enhances transparency and accountability in both educational and corporate institutions.
+                It ensures accurate record -keeping and reduces the potential for human error or manipulation.
+SDG 8 : Decent Work and Economic Growth
+•Objective : Increase productivity and efficiency in the workplace.
+•Impact : In a corporate setting, the robot can log employee attendance, manage schedules, and track
+performance metrics.
+CORE OBJECTIVES OF THE PROJECT
+•To develop a fully automated robotic system(FARS) that integrates face 
+recognition using machine learning, Real time data analytics, cloud 
+based database system and IoT technologies to enhance campus 
+security  and operational efficiency.
+•This system will automate the identification of individuals, manage 
+access control, and provide real -time data to administrators.
+
+PROBLEM STATEMENT
+•The need for enhanced security and operational efficiency in management is critical.
+•Traditional security systems often rely on manual processes , leading to human errors , delays in 
+response times , and increased operational costs. 
+•the growing complexity of management environments , coupled with evolving security threats , 
+necessitates innovative solutions that can proactively identify risks, automate routine tasks , 
+and provide real -time insights for informed decision -making.
+
+Abstract
+•This system uses machine learning to automatically monitor and record key activities 
+in schools and workplaces, offering real -time data and insights to improve decision -
+making and efficiency. 
+•It's designed to integrate easily with  existing systems, prioritize data privacy, and 
+adapt to changing needs, making it a valuable tool for optimizing resources  and 
+boosting productivity.
+LITERATURE REVIEW
+S.No.Title of  the Journal  
+ArticleAuthorsYear of  
+PublicationProblem  Defined Drawback
+01"Face Recognition 
+Systems in Security 
+Applications"Mathew 
+Turk and 
+Alex 
+Pentland2018The study highlights the limitations of 
+traditional security systems and the 
+need for advanced face recognition 
+technologies.The existing systems often 
+struggle with accuracy in 
+diverse lighting conditions and 
+require significant 
+computational resources.
+02“Machine Learning for 
+IoT Security”Jane Smith 2020This paper discusses the challenges of 
+securing IoT devices and networks..The integration of machine 
+learning in IoT security is still 
+in its infancy, with issues 
+related to data privacy and 
+real-time processing..
+
+S.No. Title of  the Journal  Article AuthorsYear of  
+PublicationProblem  Defined Drawback
+03"Wearable Computing and 
+Augmented Reality for 
+Enhanced Accessibility"Davis.L ., & 
+Kim.J .2019This study explores the potential of 
+wearable computing and AR in improving 
+accessibility for individuals with cognitive 
+disabilities, focusing on real -time 
+feedback and contextual information.The article points out that 
+while wearable AR 
+devices offer potential, 
+issues such as user 
+comfort and device 
+accuracy remain 
+challenging.
+04"Real -Time Object 
+Recognition and Description 
+Systems for the Visually 
+Impaired"Lee.C ., & 
+Martinez.A2022The research investigates systems that 
+use real -time object recognition to aid 
+visually impaired users, providing 
+descriptions of objects within their 
+environment.A significant drawback 
+identified is the latency in 
+object recognition and 
+description, which affects 
+the real -time usefulness 
+of such systems.
+
+EXISTING SYSTEM DESIGN
+•Manual Monitoring and Surveillance
+•Security Personnel : Guards patrol and monitor feeds, prone to human error.
+•CCTV Cameras : Require continuous supervision, lack intelligent detection.
+•Access Control Systems
+•ID Cards and Badges : Prone to loss, theft, and duplication.
+•Keypad Entry Systems : Vulnerable to shared or observed PIN codes.
+•Alarm Systems
+•Intrusion Alarms : Prone to false alarms, triggering on motion detection.
+•Fire Alarms : Focused on fire safety, not comprehensive security.
+•Data Storage and Retrieval
+•Local Servers : Difficult real -time access and analysis.
+•Manual Review : Time -consuming, impractical for immediate threat detection.
+•Communication Systems
+•Intercoms and Hotlines : Outdated, limited efficiency in emergencies.
+•Lack of Real -Time Alerts : Reduces effectiveness of immediate responses.
+DESIGN OF THE PROPOSED SOLUTION
+The proposed FARS system includes the following components:
+•Hardware : NodeMCU  ESP32, IR sensors, camera modules,    
+              networking equipment (routers, hubs), and Raspberry Pi.
+•Software : Python for OpenCV face recognition, Firebase Cloud Server      
+            for authentication and data storage, HTML/CSS/JavaScript   
+            for the web/admin interface.
+•Libraries/Frameworks : OpenCV, TensorFlow, Firebase SDK.
+The system will use machine learning algorithms to improve face 
+recognition accuracy and adapt to changing conditions. It will integrate 
+with existing campus networks for seamless communication and 
+coordination.
+SYSTEM ARCHITECTURE
+ENHANCED 
+ROBOTIC VISIONHAPTICS 
+AND 
+BATTERIES
+VOICE COMMAND 
+INTERFACE 
+MICRO 
+CONTROLLER
+CAM MODULE
+ SENSORS
+Wi-Fi
+ AND 
+BLUETOOTH
+CLOUD 
+SERVICES
+MACHINE 
+LEARNING 
+MODELSUSER
+HARDWARE
+BUSINESS MODEL CANVAS
+NGOs:  Organizations working 
+with differently -abled 
+individuals.
+Research Institutes:  
+Institutions focusing on 
+assistive technologies and AR 
+research.
+Educational Institutions:  
+Schools, colleges, and 
+universities.Product development, 
+R&D, marketing, 
+customer support.
+Financial capital,
+ technical expertise, 
+manufacturing facilities.Enhanced Independence:  
+Provides differently -abled 
+individuals with greater 
+autonomy in navigation and 
+object recognition.
+Real -Time Assistance:  Instant 
+haptic feedback and guidance 
+through AR overlays and 
+voice commands.
+Cost -Effective Solution:  
+Affordable pricing compared 
+to traditional assistive 
+technologies.Personal Assistance:  
+Dedicated support for setup 
+and troubleshooting.
+Feedback Systems:  Regular 
+surveys and feedback 
+mechanisms to gather user 
+input for improvements.
+Direct sales,
+online platforms, 
+healthcare providers, 
+educational institutions.Visually Impaired Individuals:  
+Primary target users who will 
+benefit from navigation and 
+object recognition features.
+NGOs:  Organizations working 
+with differently -abled 
+communities.
+Government Agencies:  
+Programs focused on 
+enhancing accessibility and 
+independence for differently -
+abled individuals.
+Educational Institutions:  
+Schools and universities 
+looking to provide inclusive 
+education tools.
+Product sales, subscription services, partnerships, 
+grants, customization services.Production cost roughly estimated : $199.30 = ₹16,698.52
+PROPOSED BUDJET
+S.NO NAME AMOUNT
+01. Hardware Components ( ESP BOARDS, Micro - Controllers ) : $35.81
+02. Manufacturing : $14.33
+03. Assembly : $9.55
+04. Software development : $23.88
+05. Database management ( AWS, AZURE ) : $12.65 ( per month )
+06. Generation of ML model, AR Integration : $41.94
+07. Maintenance : $11.94
+08. Customer Support : $14.33
+09. Initial Marketing : $17.31
+10. Miscellaneous Components (sensors, wiring): $17.91
+GRAND TOTAL : $199.35  = ₹16,698.52
+
+FUTURE ENHANCEMENT
+•Scalability :
+•Expansion to Larger Areas : The system can be extended to cover more extensive areas , such as additional campus buildings, 
+parking lots, and nearby off -campus locations, ensuring comprehensive security coverage .
+•Advanced Analytics :
+•Predictive Analytics for Threat Identification : Implementing machine learning models that analyze historical data to predict 
+potential security threats , enabling proactive measures to prevent incidents.
+•Behavioral Analysis : Using advanced analytics to study the behavior patterns of individuals , identifying anomalies that may 
+indicate suspicious activities or security breaches.
+•Mobile Integration :
+•Administrator Mobile App : Developing a mobile application that allows administrators to monitor live feeds , receive real-time 
+alerts , and control the security system remotely, enhancing their ability to respond quickly to incidents.
+•Enhanced Privacy :
+•Advanced Encryption Methods : Incorporating state -of-the-art encryption techniques to secure data transmission and storage, 
+ensuring that sensitive information remains protected from unauthorized access .
+•Data Anonymization : Implementing anonymization protocols to protect the privacy of individuals captured in surveillance 
+footage , making it possible to use the data for analysis without compromising personal privacy.
+REFERENCE
+•Title of Journal Article : "Real -time Face Detection and Recognition Using Improved Viola -Jones Algorithm 
+and Deep Learning"
+•Author : A. Khraisat , I. Alsmadi , A. Awajan
+•Problem Defined : The paper addresses the need for real -time and accurate face detection and recognition systems.
+•IEEE Journal : IEEE Xplore Link
+•Title of Journal Article : "IoT -Based Smart Surveillance Security System Using Deep Learning for Home 
+Automation"
+•Author : H. N. Dai, R. C. Y. Ngai, M. Lyu
+•Problem Defined : The study focuses on the implementation of a smart surveillance system using IoT and deep learning technologies.
+•IEEE Journal : IEEE Xplore Link
+
+
+Bac
+k
+“We must be the change that we wish to see in the world”
+                                                              - Mahatma Gandhi

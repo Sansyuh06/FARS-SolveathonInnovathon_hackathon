@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="FARS Digital Twin — Real-time autonomous hospital campus simulation with robotic agents, face recognition, and IoT device monitoring">
+  <title>FARS Digital Twin — Autonomous Campus Simulation</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230066ff'/><text x='16' y='22' text-anchor='middle' fill='white' font-size='18' font-weight='bold'>F</text></svg>">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ═══════ TOP BAR ═══════ -->
+  <header class="top-bar">
+    <div class="brand">
+      <div class="brand-icon">F</div>
+      <div>
+        <div class="brand-name">FARS DIGITAL TWIN</div>
+        <div class="brand-sub">Fully Automated Robotic Systems — Campus Simulation</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div style="display:flex;align-items:center;gap:6px;margin-right:12px;">
+        <div class="status-dot"></div>
+        <span class="status-text">LIVE</span>
+      </div>
+
+      <span style="font-size:10px;color:var(--text-muted);margin-right:4px;">SPEED</span>
+      <button class="speed-btn active" data-speed="1">1×</button>
+      <button class="speed-btn" data-speed="2">2×</button>
+      <button class="speed-btn" data-speed="5">5×</button>
+
+      <div style="width:1px;height:24px;background:var(--border-solid);margin:0 8px;"></div>
+
+      <button class="ctrl-btn" id="btn-pause">⏸ Pause</button>
+      <button class="ctrl-btn" id="btn-reset">↻ Reset</button>
+
+      <div style="width:1px;height:24px;background:var(--border-solid);margin:0 8px;"></div>
+
+      <div class="sim-clock" id="sim-clock">00:00:00</div>
+    </div>
+  </header>
+
+  <!-- ═══════ MAIN CONTENT ═══════ -->
+  <div class="main-content">
+
+    <!-- ─── Canvas (Simulation View) ─── -->
+    <div class="canvas-wrap">
+      <canvas id="sim-canvas"></canvas>
+
+      <!-- Overlay badges -->
+      <div class="canvas-overlay">
+        <div class="overlay-badge">🏥 Hospital Campus</div>
+        <div class="overlay-badge">🤖 5 Robots</div>
+        <div class="overlay-badge">👥 33 Agents</div>
+        <div class="overlay-badge">Drag to pan · Scroll to zoom · Click robot to inspect</div>
+      </div>
+
+      <!-- Inspector Panel (floating on canvas) -->
+      <div id="inspector-panel">
+        <div class="insp-header">
+          <span id="inspector-title">Robot Inspector</span>
+          <button class="insp-close" id="inspector-close">✕</button>
+        </div>
+        <div class="insp-body" id="inspector-body">
+          <!-- Filled by app.js -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Sidebar Dashboard ─── -->
+    <aside class="sidebar">
+
+      <!-- KPI Cards -->
+      <div class="kpi-strip">
+        <div class="kpi-card">
+          <div class="kpi-value accent" id="kpi-robots">0 / 5</div>
+          <div class="kpi-label">Active Robots</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-value success" id="kpi-assisted">0</div>
+          <div class="kpi-label">Assisted</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-value success" id="kpi-tasks">0</div>
+          <div class="kpi-label">Tasks Done</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-value warning" id="kpi-response">0s</div>
+          <div class="kpi-label">Avg Response</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-value warning" id="kpi-pending">0</div>
+          <div class="kpi-label">Pending</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-value accent" id="kpi-active">0</div>
+          <div class="kpi-label">Active Tasks</div>
+        </div>
+      </div>
+
+      <!-- Tab Bar -->
+      <div class="tab-bar">
+        <button class="tab-btn active" data-tab="robots">Robots</button>
+        <button class="tab-btn" data-tab="tasks">Tasks</button>
+        <button class="tab-btn" data-tab="iot">IoT</button>
+        <button class="tab-btn" data-tab="events">Events</button>
+      </div>
+
+      <!-- Tab Panels -->
+      <div class="tab-content">
+
+        <!-- Robots Tab -->
+        <div class="tab-panel active" id="tab-robots">
+          <div class="section-title">Fleet Status</div>
+          <div id="robot-list">
+            <!-- Filled by app.js -->
+          </div>
+        </div>
+
+        <!-- Tasks Tab -->
+        <div class="tab-panel" id="tab-tasks">
+          <div class="section-title">Pending Queue</div>
+          <div id="task-queue"><div class="empty-state">No pending tasks</div></div>
+          <div class="section-title" style="margin-top:12px;">Active Tasks</div>
+          <div id="active-tasks"><div class="empty-state">No active tasks</div></div>
+        </div>
+
+        <!-- IoT Tab -->
+        <div class="tab-panel" id="tab-iot">
+          <div class="section-title">Device Status</div>
+          <div id="iot-list">
+            <!-- Filled by app.js -->
+          </div>
+        </div>
+
+        <!-- Events Tab -->
+        <div class="tab-panel" id="tab-events">
+          <div class="section-title">System Event Log</div>
+          <div id="event-log">
+            <!-- Filled by app.js -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="sidebar-footer">
+        FARS v2.0 — Digital Twin Simulation Engine &middot; Autonomous Mode
+      </div>
+
+    </aside>
+
+  </div>
+
+</div>
+
+<script type="module" src="js/app.js"></script>
+
+</body>
+</html>

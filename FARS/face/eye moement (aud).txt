@@ -1,0 +1,156 @@
+#define CLK 13
+#define DIN 11
+#define CS  10
+#define X_S 4
+#define Y_S 4
+#define N_S (X_S * Y_S)
+
+byte fb[8 * N_S];
+
+byte ePat[2][8] = {
+  { 
+    0b00111100, 
+    0b01111110, 
+    0b11111111, 
+    0b11111111, 
+    0b11111111, 
+    0b01111110, 
+    0b00111100, 
+    0b00000000  
+  },
+  { 
+    0b00111100, 
+    0b01111110, 
+    0b11111111, 
+    0b11111111, 
+    0b11111111, 
+    0b01111110, 
+    0b00111100, 
+    0b00000000  
+  }
+};
+
+void shiftAll(byte addr, byte data) {
+  digitalWrite(CS, LOW);
+  for (int i = 0; i < N_S; i++) {
+    shiftOut(DIN, CLK, MSBFIRST, addr);
+    shiftOut(DIN, CLK, MSBFIRST, data);
+  }
+  digitalWrite(CS, HIGH);
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(CLK, OUTPUT);
+  pinMode(DIN, OUTPUT);
+  pinMode(CS, OUTPUT);
+
+  shiftAll(0x0f, 0x00);
+  shiftAll(0x0b, 0x07);
+  shiftAll(0x0c, 0x01);
+  shiftAll(0x0a, 0x0f);
+  shiftAll(0x09, 0x00);
+}
+
+void show() {
+  for (byte r = 0; r < 8; r++) {
+    digitalWrite(CS, LOW);
+    byte s = N_S;
+    while (s--) {
+      byte x = s % X_S;
+      byte y = s / X_S * 8;
+      byte a = (r + y) * X_S;
+
+      if (s & X_S) {
+        shiftOut(DIN, CLK, MSBFIRST, 8 - r);
+        shiftOut(DIN, CLK, LSBFIRST, fb[a + x]);
+      } else {
+        shiftOut(DIN, CLK, MSBFIRST, 1 + r);
+        shiftOut(DIN, CLK, MSBFIRST, fb[a - x + X_S - 1]);
+      }
+    }
+    digitalWrite(CS, HIGH);
+  }
+}
+
+void setPxl(uint8_t x, uint8_t y, uint8_t mode) {
+  byte *addr = &fb[x / 8 + y * X_S];
+  byte m = 128 >> (x % 8);
+  switch (mode) {
+    case 0:
+      *addr &= ~m;
+      break;
+    case 1:
+      *addr |= m;
+      break;
+    case 2:
+      *addr ^= m;
+      break;
+  }
+}
+
+void safePxl(uint8_t x, uint8_t y, uint8_t mode) {
+  if ((x >= X_S * 8) || (y >= Y_S * 8))
+    return;
+  setPxl(x, y, mode);
+}
+
+void clr() {
+  byte *addr = fb;
+  for (byte i = 0; i < 8 * N_S; i++)
+    *addr++ = 0;
+}
+
+void drawE(int offset) {
+  clr();
+  
+  int ew = 8;
+  int es = 8;
+
+  for (int i = 0; i < 2; i++) {
+    byte *e = ePat[i];
+    int x = i * (ew + es) + offset;
+
+    for (int y = 0; y < 8; y++) {
+      for (int xp = 0; xp < 8; xp++) {
+        if (e[y] & (1 << (7 - xp))) {
+          safePxl(x + xp, y, 1);
+        }
+      }
+    }
+  }
+
+  show();
+}
+
+void blink() {
+  drawE(0);
+  delay(500);
+  
+  clr();
+  show();
+  delay(200);
+  
+  drawE(0);
+  delay(500);
+}
+
+void eyeMov() {
+  int off = 0;
+  for (int i = 0; i < 10; i++) {
+    drawE(off);
+    off = (off == 2) ? -2 : off + 2;
+    delay(500);
+  }
+}
+
+void loop() {
+  static unsigned long lT = 0;
+  unsigned long cT = millis();
+  
+  if (cT - lT > 5000) {
+    lT = cT;
+    blink();
+    eyeMov();
+  }
+}

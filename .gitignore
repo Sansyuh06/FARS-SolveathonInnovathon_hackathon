@@ -1,0 +1,49 @@
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.ipynb_checkpoints/
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Large binaries & archives
+*.zip
+*.apk
+*.tar.gz
+*.tgz
+*.rar
+
+# Databases & local logs
+*.db
+*.sqlite
+*.sqlite3
+attendance_log.txt
+fars_platform/data/*.db
+fars_platform/data/*.txt
+
+# IDEs & System files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Unity specific ignores
+/[Ff]ars_[Uu]nity/[Ff]ars_[Uu]nity/[Ll]ibrary/
+/[Ff]ars_[Uu]nity/[Ff]ars_[Uu]nity/[Tt]emp/
+/[Ff]ars_[Uu]nity/[Ff]ars_[Uu]nity/[Oo]bj/
+/[Ff]ars_[Uu]nity/[Ff]ars_[Uu]nity/[Ll]ogs/
+/[Ff]ars_[Uu]nity/[Ff]ars_[Uu]nity/[Uu]ser[Ss]ettings/
+/[Ff]ars_[Uu]nity/[Ff]ars_[Uu]nity/[Aa]ssetStoreTools/
+/[Ff]ars_[Uu]nity/[Ff]ars_[Uu]nity/[Pp]rojectSettings/ProjectVersion.txt
+**/Library/
+**/Temp/
+**/Obj/
+**/Logs/
+**/UserSettings/
+**/AssetStoreTools/
+
