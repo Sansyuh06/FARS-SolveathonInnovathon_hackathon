@@ -47,3 +47,10 @@ Thumbs.db
 **/UserSettings/
 **/AssetStoreTools/
 
+# Dependency files and lockfiles
+requirements.txt
+*package-lock.json
+*bun.lock
+*package.json
+
+
