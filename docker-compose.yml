@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  fars-os:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: fars-os-vm
+    privileged: true
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      # Pass through X11 socket for 3D Simulation GUI rendering
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    environment:
+      - DISPLAY=${DISPLAY:-:0}
+    ports:
+      - "8080:8080"   # FARS Kernel API
+      - "3000:3000"   # Desktop Web Dashboard
+      - "11434:11434" # Ollama LLM Port
+    command: /lib/systemd/systemd
+    stop_signal: SIGRTMIN+3

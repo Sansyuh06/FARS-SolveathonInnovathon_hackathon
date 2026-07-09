@@ -1,0 +1,13 @@
+[Unit]
+Description=FARS-OS Python Kernel & API
+After=network.target fars-ollama.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/fars-os/kernel
+ExecStart=/usr/bin/python3 run.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from fars_platform.core.database import Database
-from fars_platform.core.event_bus import EventBus
-from fars_platform.core.platform_state import PlatformState
+from kernel.core.database import Database
+from kernel.core.event_bus import EventBus
+from kernel.core.platform_state import PlatformState
 
 
 class AnalyticsService:

@@ -714,7 +714,7 @@ class Simulation:
 
 if __name__ == "__main__":
     print("=" * 50)
-    print("🤖 R2D2 MULTI-AGENT SIMULATION")
+    print("R2D2 MULTI-AGENT SIMULATION")
     print("=" * 50)
     print("\nControls:")
     print("  🖱️  Click on a robot to select it")

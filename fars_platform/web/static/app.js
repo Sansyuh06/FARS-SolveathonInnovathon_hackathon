@@ -104,3 +104,23 @@ el("scan-btn").onclick = async () => {
 
 refresh();
 setInterval(refresh, 3000);
+
+function connectRLWebsocket() {
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const wsUrl = protocol + '//' + window.location.host + '/ws/rl';
+  const ws = new WebSocket(wsUrl);
+  
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    el("rl-ep").textContent = data.episode;
+    el("rl-rew").textContent = data.reward;
+    el("rl-loss").textContent = data.loss;
+    el("rl-stab").textContent = data.gait_stability;
+  };
+  
+  ws.onclose = () => {
+    setTimeout(connectRLWebsocket, 3000);
+  };
+}
+
+connectRLWebsocket();

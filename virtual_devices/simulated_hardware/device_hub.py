@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 from fars_platform.config import IMAGES_DIR, IR_SCAN_INTERVAL
-from fars_platform.core.database import Database
-from fars_platform.core.event_bus import EventBus
+from kernel.core.database import Database
+from kernel.core.event_bus import EventBus
 from fars_platform.services.access_control import AccessControlService
 
 # Map campus zones to IoT device IDs in the database

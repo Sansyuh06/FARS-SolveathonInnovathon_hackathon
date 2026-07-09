@@ -4,7 +4,7 @@ from __future__ import annotations
 import sys
 
 from fars_platform.config import SIMULATION_DIR
-from fars_platform.core.platform_state import PendingSimTask, PlatformState
+from kernel.core.platform_state import PendingSimTask, PlatformState
 
 # Ensure simulation package importable
 if str(SIMULATION_DIR) not in sys.path:

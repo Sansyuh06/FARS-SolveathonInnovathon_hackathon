@@ -158,7 +158,7 @@ class R2D2(Entity):
         
         # Antenna - using cubes instead of cylinder
         self.antenna_base = Entity(
-            parent=self.head,
+            parent=self.dome,
             model='cube',
             color=color.gray,
             scale=(0.06, 0.25, 0.06),

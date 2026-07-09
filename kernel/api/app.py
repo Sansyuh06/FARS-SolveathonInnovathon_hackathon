@@ -97,4 +97,26 @@ def create_app(db, analytics, access, device_hub, bus, state) -> FastAPI:
         except WebSocketDisconnect:
             pass
 
+    @app.websocket("/ws/rl")
+    async def websocket_rl(ws: WebSocket):
+        await ws.accept()
+        try:
+            import asyncio
+            import random
+            
+            episode = 45000
+            while True:
+                # Simulate active RL learning telemetry
+                payload = {
+                    "episode": episode,
+                    "reward": round(random.uniform(800, 850), 2),
+                    "loss": round(random.uniform(0.01, 0.05), 4),
+                    "gait_stability": round(random.uniform(95, 99), 1)
+                }
+                episode += 1
+                await ws.send_json(payload)
+                await asyncio.sleep(1)
+        except WebSocketDisconnect:
+            pass
+
     return app

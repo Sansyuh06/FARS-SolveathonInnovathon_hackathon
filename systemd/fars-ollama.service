@@ -1,0 +1,12 @@
+[Unit]
+Description=Ollama Offline 7B LLM Server
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/local/bin/ollama serve
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,13 @@
+[Unit]
+Description=FARS-OS Desktop Web Dashboard
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/fars-os/desktop/website
+ExecStart=/usr/bin/npm run dev
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

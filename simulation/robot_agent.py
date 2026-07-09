@@ -7,6 +7,7 @@ from ursina import *
 import math
 import time as _time
 from navigation import find_path, get_node_position
+from physics_bridge import PhysicsBridge
 
 ROBOT_COLORS = [
     color.rgb32(0, 200, 255),
@@ -66,6 +67,7 @@ class RobotAgent:
         self.task_timer = 0.0
         self._last_dt = 0.016
         self._anim_time = 0
+        self.bridge = PhysicsBridge()
 
         sx, sz = get_node_position(start_node)
         self.world_x = sx + (robot_id - 2) * 2.5
@@ -128,14 +130,29 @@ class RobotAgent:
                 parent=self.entity,
             )
 
-        # Treads
-        for offset in [-0.4, 0.4]:
-            Entity(
-                model='cube', scale=(0.8, 0.4, 0.3),
-                position=(0, -0.4, offset),
-                color=color.rgb32(25, 28, 35), unlit=True,
-                parent=self.entity,
-            )
+        # Left Arm
+        self.l_shoulder = Entity(parent=self.entity, position=(-0.6, 0.2, 0))
+        self.l_upper_arm = Entity(parent=self.l_shoulder, model='cube', color=color.rgb32(140, 150, 170), scale=(0.15, 0.5, 0.15), position=(0, -0.25, 0), unlit=True)
+        self.l_elbow = Entity(parent=self.l_upper_arm, position=(0, -0.25, 0))
+        self.l_lower_arm = Entity(parent=self.l_elbow, model='cube', color=color.rgb32(20, 25, 35), scale=(0.8, 0.8, 0.8), position=(0, -0.4, 0), unlit=True)
+
+        # Right Arm
+        self.r_shoulder = Entity(parent=self.entity, position=(0.6, 0.2, 0))
+        self.r_upper_arm = Entity(parent=self.r_shoulder, model='cube', color=color.rgb32(140, 150, 170), scale=(0.15, 0.5, 0.15), position=(0, -0.25, 0), unlit=True)
+        self.r_elbow = Entity(parent=self.r_upper_arm, position=(0, -0.25, 0))
+        self.r_lower_arm = Entity(parent=self.r_elbow, model='cube', color=color.rgb32(20, 25, 35), scale=(0.8, 0.8, 0.8), position=(0, -0.4, 0), unlit=True)
+
+        # Left Leg
+        self.l_hip = Entity(parent=self.entity, position=(-0.3, -0.5, 0))
+        self.l_upper_leg = Entity(parent=self.l_hip, model='cube', color=color.rgb32(140, 150, 170), scale=(0.2, 0.6, 0.2), position=(0, -0.3, 0), unlit=True)
+        self.l_knee = Entity(parent=self.l_upper_leg, position=(0, -0.3, 0))
+        self.l_lower_leg = Entity(parent=self.l_knee, model='cube', color=color.rgb32(20, 25, 35), scale=(0.8, 0.8, 0.8), position=(0, -0.4, 0), unlit=True)
+
+        # Right Leg
+        self.r_hip = Entity(parent=self.entity, position=(0.3, -0.5, 0))
+        self.r_upper_leg = Entity(parent=self.r_hip, model='cube', color=color.rgb32(140, 150, 170), scale=(0.2, 0.6, 0.2), position=(0, -0.3, 0), unlit=True)
+        self.r_knee = Entity(parent=self.r_upper_leg, position=(0, -0.3, 0))
+        self.r_lower_leg = Entity(parent=self.r_knee, model='cube', color=color.rgb32(20, 25, 35), scale=(0.8, 0.8, 0.8), position=(0, -0.4, 0), unlit=True)
 
         # Ground glow
         self.ground_glow = Entity(
@@ -269,10 +286,22 @@ class RobotAgent:
 
         self.ground_glow.position = (self.world_x, FLOOR_Y + 0.05, self.world_z)
 
+        def reset_pose():
+            self.l_hip.rotation_x = 0
+            self.r_hip.rotation_x = 0
+            self.l_knee.rotation_x = 0
+            self.r_knee.rotation_x = 0
+            self.l_shoulder.rotation_x = 0
+            self.r_shoulder.rotation_x = 0
+            self.l_elbow.rotation_x = 0
+            self.r_elbow.rotation_x = 0
+
         if self.state == 'idle':
+            reset_pose()
             self._check_low_battery()
             return
         if self.state == 'charging':
+            reset_pose()
             self._charge(dt)
             return
         if self.state in ('navigating', 'guiding', 'delivering', 'assisting', 'returning'):
@@ -301,6 +330,17 @@ class RobotAgent:
             cur = self.entity.rotation_y
             diff = (angle - cur + 180) % 360 - 180
             self.entity.rotation_y += diff * min(1, dt * 8)
+            
+            # RL Physics Bridge Animation
+            angles = self.bridge.get_joint_angles(dt, speed/dt, dist, picked_up=self.state=='delivering')
+            self.r_hip.rotation_x = angles['hip_r']
+            self.r_knee.rotation_x = angles['knee_r']
+            self.l_hip.rotation_x = angles['hip_l']
+            self.l_knee.rotation_x = angles['knee_l']
+            self.r_shoulder.rotation_x = angles['shoulder_r']
+            self.r_elbow.rotation_x = angles['elbow_r']
+            self.l_shoulder.rotation_x = angles['shoulder_l']
+            self.l_elbow.rotation_x = angles['elbow_l']
 
         self.entity.position = (self.world_x, 0.6, self.world_z)
         self.battery = max(0, self.battery - BATTERY_DRAIN_RATE * dt)

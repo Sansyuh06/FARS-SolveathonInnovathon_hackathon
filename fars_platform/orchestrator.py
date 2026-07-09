@@ -9,15 +9,15 @@ import traceback
 
 import uvicorn
 
-from fars_platform.api.app import create_app
+from kernel.api.app import create_app
 from fars_platform.config import API_HOST, API_PORT, SIMULATION_DIR
-from fars_platform.core.database import Database
-from fars_platform.core.event_bus import EventBus
-from fars_platform.core.platform_state import PlatformState
+from kernel.core.database import Database
+from kernel.core.event_bus import EventBus
+from kernel.core.platform_state import PlatformState
 from fars_platform.services.access_control import AccessControlService
 from fars_platform.services.analytics import AnalyticsService
 from fars_platform.services.face_service import FaceRecognitionService
-from fars_platform.simulated_hardware.device_hub import DeviceHub
+from virtual_devices.simulated_hardware.device_hub import DeviceHub
 from fars_platform.util.network import find_free_port, wait_for_server
 
 # Set by orchestrator so other modules can read the bound port

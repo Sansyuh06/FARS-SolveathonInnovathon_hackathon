@@ -4,9 +4,9 @@ from __future__ import annotations
 from typing import Any, Dict
 
 from fars_platform.config import ATTENDANCE_LOG, UNKNOWN_FACE_DENY
-from fars_platform.core.database import Database
-from fars_platform.core.event_bus import EventBus
-from fars_platform.core.platform_state import PendingSimTask, PlatformState
+from kernel.core.database import Database
+from kernel.core.event_bus import EventBus
+from kernel.core.platform_state import PendingSimTask, PlatformState
 from fars_platform.services.face_service import FaceRecognitionService
 
 _VALID_NODES = frozenset({

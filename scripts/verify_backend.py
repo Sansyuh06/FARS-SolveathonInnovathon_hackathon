@@ -28,14 +28,14 @@ def main() -> int:
     print("FARS backend verification\n")
 
     def import_platform():
-        from fars_platform.core.database import Database
-        from fars_platform.core.event_bus import EventBus
+        from kernel.core.database import Database
+        from kernel.core.event_bus import EventBus
         from fars_platform.services.face_service import FaceRecognitionService
         from fars_platform.services.access_control import AccessControlService
         from fars_platform.services.analytics import AnalyticsService
-        from fars_platform.simulated_hardware.device_hub import DeviceHub
-        from fars_platform.api.app import create_app
-        from fars_platform.core.platform_state import PlatformState
+        from virtual_devices.simulated_hardware.device_hub import DeviceHub
+        from kernel.api.app import create_app
+        from kernel.core.platform_state import PlatformState
 
         db = Database()
         bus = EventBus()
