@@ -1,146 +1,186 @@
-# FARS — Fully Automated Robotic Systems
+# FARSverse — Interactive Robotics Simulation & Digital Twin Platform
 
-FARS is a comprehensive, production-ready, software-only simulation of a complete facility security and automation ecosystem. By bridging simulated IoT edge hardware, modern web dashboards, a 3D digital twin, and autonomous robotic pathfinding, FARS serves as a robust prototype for next-generation automated surveillance and facility management.
+**FARSverse** is a complete, desktop-quality robotics simulation, digital twin, and experimentation platform inspired by NVIDIA Omniverse, professional 3D editor interfaces, and management simulation games. 
 
-The system is designed to eliminate the high startup cost of physical hardware prototyping while remaining architecturally identical to a real-world deployment.
-
----
-
-## 📌 Problem Statement
-
-In modern commercial, educational, and medical campuses, security and operational management face several critical vulnerabilities:
-1. **Manual Surveillance & Logging**: Security personnel are prone to fatigue, distraction, and cognitive overload. Traditional CCTV monitoring is passive—relying on post-incident analysis rather than proactive threat mitigation.
-2. **Access Control Flaws**: Standard authentication methods (magnetic swipe cards, PIN codes, barcodes) are easily bypassed via card-sharing, loss, theft, or duplication.
-3. **Response Latency**: When a security breach or unknown individual is detected, the latency between detection, notification, and dispatch of security forces can range from minutes to hours.
-4. **Data Silos**: IoT sensors, access control databases, and robot fleets operate on separate platforms, making it difficult for administrators to gain unified real-time operational awareness.
+Accessible through a local web application without external cloud dependencies, FARSverse enables engineers and researchers to design environments, deploy autonomous multi-robot fleets, test pathfinding and obstacle avoidance, run comparative experiments, and analyze robotic behavior in real time.
 
 ---
 
-## 💡 The FARS Solution
-
-FARS solves these issues by establishing a fully integrated, software-simulated ecosystem:
+## 🏛️ System Architecture
 
 ```
-┌────────────────────────────────────────────────────────────────────────┐
-│                              FARS ECOSYSTEM                            │
-├───────────────────────┬──────────────────────┬─────────────────────────┤
-│    Simulated Edge     │  Central Backend &   │    3D Digital Twin      │
-│     IoT Hardware      │     REST/WS APIs     │     & Robot Fleet       │
-│  (Virtual ESP32, IR,  │  (FastAPI, SQLite,   │   (Ursina 3D Engine,    │
-│    Cameras, Wi-Fi)    │   Face Recognition)  │  A* Pathfinding, LLM)   │
-└───────────┬───────────┴──────────┬───────────┴────────────┬────────────┘
-            │                      │                        │
-            └───────────────► [ EVENT BUS ] ◄───────────────┘
+                    ┌──────────────────────────────────────────────┐
+                    │               FARSverse Studio               │
+                    │        (Next.js 15, React 19, Three.js)      │
+                    └──────────────────────┬───────────────────────┘
+                                           │ WebSocket (15 Hz) & REST
+                                           ▼
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                        FARSverse Authoritative Backend Engine                          │
+│                                (FastAPI & SQLite)                                      │
+├─────────────────────┬──────────────────────┬────────────────────┬──────────────────────┤
+│  Authoritative Loop │  World & Navigation  │   Fleet & Tasks    │  Research & Analysis │
+│  • 20 Hz tick loop  │  • Multi-room layout │   • FSM Robots     │  • Benchmark runner  │
+│  • Speed 0.5x - 4x  │  • A* Grid pathfind  │   • Multi-factor   │  • RL Gymnasium env  │
+│  • Deterministic    │  • Dynamic obstacles │     scheduler      │  • CSV/JSON export   │
+│  • Step & Pause     │  • Corridor reroutes │   • Battery models │  • Ollama & NLP rule │
+└─────────────────────┴──────────────────────┴────────────────────┴──────────────────────┘
 ```
 
-1. **Simulated Hardware Loop**: Emulates physical NodeMCU ESP32 boards, Infrared (IR) motion sensors, and camera modules. When motion is detected, simulated camera frames are captured and streamed to the backend.
-2. **AI-Driven Facial Recognition**: Identifies individuals at campus checkpoints using OpenCV and pre-trained face-encoding models. If an unknown face is detected, a security event is logged.
-3. **Autonomous Robot Dispatch**: Unknown faces or security anomalies trigger the automated creation of security patrols in the **3D Digital Twin**. Robots use A* pathfinding to navigate campus corridors to investigate the event.
-4. **Admin Telemetry Dashboard**: A unified web-based dashboard utilizing WebSockets for real-time logs, live camera streams, system status telemetry, and remote robot command dispatch.
-5. **Reinforcement Learning Sandbox**: A dedicated Gym-based training environment for training bipedal robot locomotion controllers using PyTorch, preparing robot models for physical gait simulation.
+---
+
+## ✨ Core Features
+
+### 1. 3D Robotics Studio Viewport
+- **Authoritative Rendering**: Interactive 3D hospital digital twin with 20 individually identifiable patient rooms, reception, waiting hall, pharmacy, emergency department, ICU wards, and charging stations.
+- **Robot Kinematics & Visual Telemetry**: Mobile robot bases with real-time heading indicators, dynamic battery meters, glowing status rings, and projected A* navigation path lines.
+- **Autonomous Human Agents**: Over 20 simulated patients, nurses, doctors, and visitors with behavioral routines and dynamic assistance requests.
+- **Camera Presets**: Seamlessly toggle between **Isometric Angled View**, **Top-Down 2D Architectural Floorplan**, and **Follow Robot Chase Cam**.
+- **Interactive Raycasting**: Click any robot, human, obstacle, or room in the 3D viewport to inspect its live simulation state.
+
+### 2. Autonomous Task Manager & Scheduler
+- **Multi-Factor Robot Scoring**:
+  $$\text{Score} = (12 \times \text{Priority}) - (1.4 \times \text{Distance}) + (0.45 \times \text{Battery}) - \text{Charging Penalty}$$
+- **Priority Scale**: Critical (P4), High (P3), Normal (P2), Low (P1).
+- **Decision Trace Log**: Explains why a specific robot was chosen (e.g., *"Assigned FARS-02: lowest distance 6.2m, healthy battery 84%, score 68.3"*).
+- **Battery Dynamics**: Realistic consumption based on distance traveled ($0.18\%/\text{m}$) and idle time, with autonomous return-to-dock behaviors when battery falls below $20\%$.
+
+### 3. Dynamic Obstacle Avoidance & Replanning
+- Place obstacles (medical carts, maintenance signs, pallets) directly into corridors.
+- Dynamic obstacle toggling immediately updates the navigation graph and triggers automated A* path recalculation or blockage alerts.
+
+### 4. Natural Language Commands (Offline & Ollama)
+- Control the simulation via plain English:
+  - *"Send the nearest available robot to Room 19"*
+  - *"Deliver medication to ICU Ward 2"*
+  - *"Block the west corridor and observe reactions"*
+  - *"Pause all robots"* / *"Resume simulation"*
+- Supports local Ollama 7B LLM servers with zero-latency deterministic regex fallback.
+
+### 5. Experiment & Analysis Laboratory
+- Run automated benchmarks comparing fleet sizes (e.g. 1-Robot vs 3-Robots vs 5-Robots) over identical workloads.
+- Measures:
+  - Task completion rate (%)
+  - Average response time (s)
+  - Total travel distance (m)
+  - Battery consumed (%)
+  - Collisions / Obstacle reroutes
+  - Robot idle time (s)
+- One-click **CSV / JSON Export** for research analysis.
+
+### 6. Reinforcement Learning Laboratory
+- Authentic **Gymnasium** environment (`HospitalGridNavEnv`) with Box(6) continuous observations and Discrete(4) actions.
+- Real neural Q-learning training runs tracking episode rewards and comparing against classical A* shortest-path baselines.
+
+### 7. Project Persistence & Asset Uploads
+- SQLite-backed project library supporting templates:
+  - **Hospital Showcase (Flagship)**
+  - **Campus Quad**
+  - **Logistics Fulfillment Center**
+  - **Blank Sandbox Workspace**
+- Secure drag-and-drop `.glb` and `.gltf` 3D model asset uploader with path traversal protection and 50MB file validation.
 
 ---
 
-## 🛠️ Tech Stack
+## 🚀 Quick Start Guide
 
-### Backend & Core Services
-- **Language**: Python 3.10+
-- **API Framework**: FastAPI (REST endpoints & real-time WebSockets)
-- **Database**: SQLite (SQLAlchemy ORM for local state persistence) / Firebase integration support
-- **Computer Vision**: OpenCV (`opencv-python`) & `face_recognition` (dlib-based high-accuracy encodings)
+### Prerequisites
+- Python 3.10+
+- Node.js 18+ and npm
 
-### 3D Digital Twin & Simulation
-- **3D Engine**: Ursina Engine (built on top of Panda3D) for the 3D campus twin.
-- **Pathfinding**: A* Search Algorithm mapped onto a grid representation of the environment.
-- **Command Parser**: Custom NLP / LLM Command Parser translating voice or text strings (e.g., *"Go to Room 101"*) into structured JSON instructions for the robot task queues.
+### 1. Launch with One Click (Windows)
+Double-click [`launch_farsverse.bat`](file:///d:/fyeshi/project/rohit/launch_farsverse.bat) or run from PowerShell:
+```powershell
+.\launch_farsverse.bat
+```
 
-### Admin Dashboard & Frontend
-- **Frontend Stack**: Semantic HTML5, Vanilla CSS3 (glassmorphism UI layout), Modern JavaScript (Fetch API, WebSocket streams).
-- **Visualization**: Chart.js for real-time analytics.
+### 2. Launch on Linux / macOS
+```bash
+chmod +x launch_farsverse.sh
+./launch_farsverse.sh
+```
 
-### Reinforcement Learning
-- **Environments**: OpenAI Gym
-- **Framework**: PyTorch (Deep Q-Networks / Policy Gradients for robot locomotion training)
-- **Visualization**: Pygame / Custom rendering for physical gait steps.
+### 3. Launching Services Manually
+In terminal 1 (Backend API & Authoritative Engine):
+```bash
+python fars_platform/run.py --no-3d
+```
+In terminal 2 (Next.js Studio Frontend):
+```bash
+cd desktop/farsy-main
+npm run dev
+```
+Open **[http://localhost:3000](http://localhost:3000)** in your browser.
 
 ---
 
-## 🏗️ System Architecture & Component Breakdown
+## 🧪 Automated Acceptance Testing
+
+FARSverse includes a comprehensive test suite validating all 10 mandatory workflows:
+```bash
+python tests/test_farsverse_acceptance.py
+```
+Test results verify:
+1. Start simulation & real-time state synchronization
+2. Manual task assignment & waypoint following
+3. Natural language command interpretation
+4. Robot inspection & pause/step controls
+5. Obstacle collision detection & dynamic rerouting
+6. Battery depletion & autonomous charging returns
+7. Project persistence & SQLite reopening
+8. 3D asset (.glb) format validation
+9. Benchmark scenario execution & CSV export
+10. Backend reset & system resilience
+
+To run backend module verification:
+```bash
+python scripts/verify_backend.py
+```
+
+---
+
+## 📁 Repository Structure
 
 ```
 rohit/
-├── fars_platform/             # Backend, APIs, Database & Virtual Edge Devices
-│   ├── api/                   # FastAPI routes (WebSockets, analytics, robot control)
-│   ├── core/                  # Event bus, database connection, shared state
-│   ├── services/              # AI Face Recognition, Access Control registry
-│   ├── simulated_hardware/    # Virtual ESP32, camera feeds, IR sensors
-│   └── web/                   # HTML/CSS/JS files for Admin Web UI dashboard
+├── desktop/
+│   └── farsy-main/                 # Next.js 15 + Three.js FARSverse Studio
+│       ├── src/
+│       │   ├── app/                # Main simulation page & layout
+│       │   ├── components/farsverse/
+│       │   │   ├── FARSverseStudio.tsx  # Root studio shell
+│       │   │   ├── Viewport3D.tsx       # Three.js 3D Viewport
+│       │   │   ├── TopToolbar.tsx       # Transport controls & command bar
+│       │   │   ├── LeftSidebar.tsx      # Hierarchy, Builder, Fleet, Labs
+│       │   │   ├── RightInspector.tsx   # Contextual entity inspector
+│       │   │   ├── BottomConsole.tsx    # Tasks, Events, Metrics, Charts
+│       │   │   ├── AssetUploadModal.tsx # GLB/glTF 3D model uploader
+│       │   │   └── ProjectsModal.tsx    # Project templates & SQLite persistence
+│       │   └── lib/farsverse-api.ts     # Real-time WebSocket & REST client
 │
-├── full_simulation/           # 3D Digital Twin and Robot Fleet Simulation
-│   ├── agents/                # Human and robot entity models
-│   ├── hospital_world.py      # Campus layout, grids, walls, rooms setup
-│   ├── navigation.py          # A* pathfinding implementation
-│   ├── task_manager.py        # Task queuing and priority scheduler
-│   └── main_simulation.py     # Main Ursina game loop & renderer
+├── kernel/
+│   ├── api/app.py                  # FastAPI server with /ws/farsverse & REST endpoints
+│   ├── farsverse/                  # Authoritative simulation core
+│   │   ├── engine.py               # 20 Hz simulation heartbeat loop
+│   │   ├── world.py                # Hospital/Campus/Warehouse geometry & A* pathfinder
+│   │   ├── robot.py                # Robot kinematics, battery model & FSM
+│   │   ├── human.py                # Human agents & help request routines
+│   │   ├── task_manager.py         # Multi-factor priority task scheduler
+│   │   ├── nlp_parser.py           # Natural language interpreter (Ollama + fallback)
+│   │   ├── experiment_lab.py       # Benchmark suite & CSV exporter
+│   │   ├── rl_lab.py               # Gymnasium navigation environment & policy trainer
+│   │   └── persistence.py          # SQLite project & asset storage
 │
-├── reinfrocement learning/    # Locomotion & walker training environment (PyTorch)
-│   ├── base_env.py            # Custom Gym Walker environment
-│   └── walker_sim.py          # Physics and walking simulation
-│
-└── fars_iso/                  # Particle & isometric rendering experiments
+├── simulation/                     # Shared navigation & coordinate models
+├── tests/
+│   └── test_farsverse_acceptance.py # 10/10 automated acceptance test suite
+├── launch_farsverse.bat            # Single-click Windows launcher
+└── launch_farsverse.sh             # Linux launcher
 ```
 
 ---
 
-## 🚀 How to Run FARS Locally
-
-FARS runs out of the box with zero external hardware requirements. It simulates the entire campus ecosystem in-memory.
-
-### Prerequisites
-Make sure you have Python 3.10+ installed on your computer.
-
-### Step 1: Install Dependencies
-Open a terminal in the project directory and install the required Python libraries:
-```bash
-pip install -r requirements.txt
-```
-
-### Step 2: Start the Integrated Simulation
-To launch the backend API, the web dashboard, and the 3D digital twin simultaneously, use the launcher scripts:
-
-* **Windows (PowerShell - Recommended)**:
-  ```powershell
-  .\start.ps1
-  ```
-* **Windows (CMD or Double-Click)**:
-  ```cmd
-  start.bat
-  ```
-* **Linux / WSL / Git Bash**:
-  ```bash
-  chmod +x start.sh
-  ./start.sh
-  ```
-
-### Step 3: Access the Control Centers
-- **3D digital twin window**: Displays the campus lobby, classrooms, autonomous security robots, and moving human agents. Use the `Tab` key to open the text interface to type natural language commands to the robots.
-- **Admin Dashboard**: Open [http://127.0.0.1:8080/](http://127.0.0.1:8080/) in your web browser to view logs, check sensor states, examine authentication history, and send test triggers.
-- **API Documentation**: Interactive OpenAPI swagger docs are accessible at [http://127.0.0.1:8080/docs](http://127.0.0.1:8080/docs).
-
----
-
-## 📈 Impact & SDG Alignment
-
-This project aligns directly with three of the United Nations Sustainable Development Goals (SDGs):
-
-### 1. SDG 9: Industry, Innovation, and Infrastructure
-- **Objective**: Foster innovation and build resilient infrastructure.
-- **Impact**: FARS introduces a blueprint for smart campus and workplace infrastructure. By utilizing digital twin technology, facility managers can optimize layout planning and security operations digitally before deploying physical hardware, reducing manufacturing waste and material costs.
-
-### 2. SDG 16: Peace, Justice, and Strong Institutions
-- **Objective**: Promote transparent, safe, and accountable institutions.
-- **Impact**: The automated face-recognition-based logging system ensures accurate, tamper-proof record-keeping of access control history. This eliminates proxy attendance and unauthorized entry, reducing human errors in security management.
-
-### 3. SDG 8: Decent Work and Economic Growth
-- **Objective**: Increase workplace productivity and operational efficiency.
-- **Impact**: By automating repetitive surveillance tasks, security staff can transition from monitoring screens to handling escalated responses. It maximizes campus safety, making workplaces safer and operations more cost-efficient.
+## 🔒 Security & Local Operation
+- **100% Offline Capability**: Runs entirely on `localhost`. Does not require external cloud services, third-party databases, or internet access.
+- **Secure File Ingestion**: Uploaded 3D assets are checked against strict extension allowances (`.glb`, `.gltf`), bounded to 50 MB, sanitized to prevent path traversal, and stored in isolated storage directories.
+- **SQL Injection Prevention**: Parameterized queries across all database operations in SQLite with WAL mode.

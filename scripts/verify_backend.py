@@ -9,8 +9,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 os.chdir(ROOT)
 sys.path.insert(0, str(ROOT))
-sys.path.insert(0, str(ROOT / "full_simulation"))
-sys.path.insert(0, str(ROOT / "FARS"))
+sys.path.insert(0, str(ROOT / "simulation"))
+sys.path.insert(0, str(ROOT / "legacy" / "FARS"))
 
 errors: list[str] = []
 
@@ -58,7 +58,7 @@ def main() -> int:
         result = llm_command_parser.parse_command("assist patient in room 5")
         assert result and result["location_node"] == "Room5"
 
-    check("full_simulation modules", import_simulation)
+    check("simulation modules", import_simulation)
 
     def import_legacy_helpers():
         import firebase_setup  # noqa: F401
