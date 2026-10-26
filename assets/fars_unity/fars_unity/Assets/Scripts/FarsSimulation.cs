@@ -14,6 +14,20 @@ using UnityEngine.InputSystem;
 
 public class FarsSimulation : MonoBehaviour
 {
+
+    private static Shader _cachedDefaultShader = null;
+    public static Shader SafeGetShader(string preferredName = "Universal Render Pipeline/Lit")
+    {
+        if (_cachedDefaultShader != null) return _cachedDefaultShader;
+        var temp = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        if (temp != null && temp.GetComponent<Renderer>() != null && temp.GetComponent<Renderer>().sharedMaterial != null)
+        {
+            _cachedDefaultShader = temp.GetComponent<Renderer>().sharedMaterial.shader;
+        }
+        GameObject.Destroy(temp);
+        return _cachedDefaultShader;
+    }
+
     private List<RobotAgent> robots = new();
     private List<HumanAgent> humans = new();
     private TaskManager taskMgr;
@@ -528,7 +542,7 @@ public class HospitalWorldGenerator : MonoBehaviour
 
     Material CreateMaterial(Color c)
     {
-        var m = new Material(Shader.Find("Standard"));
+        var m = new Material(FarsSimulation.SafeGetShader("Universal Render Pipeline/Lit"));
         m.color = c;
         if (c.a < 1f)
         {
@@ -570,7 +584,7 @@ public class HospitalWorldGenerator : MonoBehaviour
         var ring = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         ring.transform.position = pos + Vector3.up * 0.15f;
         ring.transform.localScale = new Vector3(8, 0.05f, 8);
-        var m = new Material(Shader.Find("Standard"));
+        var m = new Material(FarsSimulation.SafeGetShader("Universal Render Pipeline/Lit"));
         m.color = new Color32(0, 200, 255, 128);
         m.SetFloat("_Mode", 3);
         m.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
@@ -771,7 +785,7 @@ public class RobotAgent : MonoBehaviour
         groundGlow.transform.SetParent(transform, false);
         groundGlow.transform.localPosition = new Vector3(0, -0.55f, 0);
         groundGlow.transform.localScale = new Vector3(2.5f, 0.01f, 2.5f);
-        glowMat = new Material(Shader.Find("Standard"));
+        glowMat = new Material(FarsSimulation.SafeGetShader("Universal Render Pipeline/Lit"));
         glowMat.color = new Color(themeColor.r/255f, themeColor.g/255f, themeColor.b/255f, 0.2f);
         glowMat.SetFloat("_Mode", 3);
         glowMat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
@@ -797,7 +811,7 @@ public class RobotAgent : MonoBehaviour
         lineGO.transform.SetParent(transform, false);
         line = lineGO.AddComponent<LineRenderer>();
         line.startWidth = 0.3f; line.endWidth = 0.1f;
-        line.material = new Material(Shader.Find("Sprites/Default"));
+        line.material = new Material(FarsSimulation.SafeGetShader("Sprites/Default"));
         line.startColor = new Color(themeColor.r / 255f, themeColor.g / 255f, themeColor.b / 255f, 0.6f);
         line.endColor = new Color(themeColor.r / 255f, themeColor.g / 255f, themeColor.b / 255f, 0.0f);
         line.positionCount = 0;
@@ -924,7 +938,7 @@ public class RobotAgent : MonoBehaviour
             var p = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             p.transform.position = transform.position;
             p.transform.localScale = Vector3.one * 0.3f;
-            var m = p.GetComponent<Renderer>().material = new Material(Shader.Find("Standard"));
+            var m = p.GetComponent<Renderer>().material = new Material(FarsSimulation.SafeGetShader("Universal Render Pipeline/Lit"));
             m.color = themeColor;
             m.EnableKeyword("_EMISSION");
             m.SetColor("_EmissionColor", (Color)themeColor * 2f);
@@ -1040,7 +1054,7 @@ public class HumanAgent : MonoBehaviour
         var torso = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         torso.transform.SetParent(modelPivot, false);
         torso.transform.localScale = new Vector3(0.5f, 0.6f, 0.5f);
-        var tm = torso.GetComponent<Renderer>().material = new Material(Shader.Find("Standard"));
+        var tm = torso.GetComponent<Renderer>().material = new Material(FarsSimulation.SafeGetShader("Universal Render Pipeline/Lit"));
         tm.color = roleColor;
         Destroy(torso.GetComponent<Collider>());
 
@@ -1055,7 +1069,7 @@ public class HumanAgent : MonoBehaviour
         shadow.transform.SetParent(transform, false);
         shadow.transform.localPosition = new Vector3(0, -0.48f, 0);
         shadow.transform.localScale = new Vector3(0.8f, 0.01f, 0.8f);
-        var sm = shadow.GetComponent<Renderer>().material = new Material(Shader.Find("Standard"));
+        var sm = shadow.GetComponent<Renderer>().material = new Material(FarsSimulation.SafeGetShader("Universal Render Pipeline/Lit"));
         sm.color = new Color(0,0,0, 0.3f);
         sm.SetFloat("_Mode", 3);
         sm.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
@@ -1385,7 +1399,7 @@ public class DashboardUI : MonoBehaviour
 
         float y = -20f;
         MakeText("Title", "FARS DIGITAL TWIN", new Vector2(15, y), 18, new Color32(0, 200, 255, 255), left.transform); y -= 25f;
-        MakeText("LiveInfo", "● LIVE | AI: LLAMA3", new Vector2(15, y), 11, new Color32(100, 255, 120, 255), left.transform); y -= 35f;
+        MakeText("LiveInfo", "● LIVE | AI: PHI-3 MINI", new Vector2(15, y), 11, new Color32(100, 255, 120, 255), left.transform); y -= 35f;
         
         MakeRect("Div1", new Vector2(150, y), new Vector2(270, 1), new Color32(35, 45, 60, 255), left.transform); y -= 15f;
 

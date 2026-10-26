@@ -34,7 +34,9 @@ Thumbs.db
 
 # Build artifacts
 build/
+unity_build/
 *.spec
+*.log
 
 /[Ff]ars_[Uu]nity/[Ff]ars_[Uu]nity/[Ll]ibrary/
 /[Ff]ars_[Uu]nity/[Ff]ars_[Uu]nity/[Tt]emp/
