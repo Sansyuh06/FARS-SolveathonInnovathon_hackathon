@@ -2,16 +2,10 @@
 
 import React, { useState } from "react";
 import {
-  Sparkles,
-  Bot,
   Send,
   X,
   CheckCircle2,
-  Clock,
-  Compass,
-  MapPin,
-  Cpu,
-  Zap,
+  Terminal,
   ArrowRight
 } from "lucide-react";
 import { sendNaturalCommand, FARSverseSnapshot } from "@/lib/farsverse-api";
@@ -56,13 +50,12 @@ export function AITaskPortalModal({
     try {
       const res = await sendNaturalCommand(prompt.trim());
       setResult(res);
-      // If robot was assigned or targeted, focus it
       if (res.target_robot && onSelectEntity) {
         onSelectEntity("robot", res.target_robot);
       }
     } catch (err: any) {
       console.error(err);
-      setError(err?.message || "Failed to communicate with Ollama service.");
+      setError(err?.message || "Failed to communicate with local Ollama runtime.");
     } finally {
       setIsLoading(false);
     }
@@ -75,58 +68,43 @@ export function AITaskPortalModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 font-mono select-none">
-      <div className="w-full max-w-2xl bg-[#11141a] border border-[#232834] rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 font-mono select-none">
+      <div className="w-full max-w-2xl bg-[#09090b] border border-[#27272a] rounded-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="h-14 border-b border-[#232834] bg-[#141822] px-5 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded bg-[#76b900] flex items-center justify-center text-black font-extrabold text-sm shadow-md shadow-[#76b900]/30">
-              Ω
-            </div>
-            <div>
-              <div className="text-xs font-bold text-white flex items-center gap-2">
-                <span>AI MISSION PLANNER & TASK PORTAL</span>
-                <span className="text-[9px] bg-[#76b900]/20 text-[#76b900] px-2 py-0.5 rounded border border-[#76b900]/40 font-semibold flex items-center gap-1">
-                  <Cpu className="w-2.5 h-2.5" />
-                  <span>Ollama: phi3:mini (RTX 4060 GPU)</span>
-                </span>
-              </div>
-              <div className="text-[10px] text-white/50">
-                Natural Language Autonomous Task Dispatcher
-              </div>
-            </div>
+        <div className="h-12 border-b border-[#27272a] bg-[#000000] px-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Terminal className="w-4 h-4 text-white" />
+            <span className="text-xs font-bold text-white tracking-wider uppercase">MISSION DISPATCH TERMINAL</span>
+            <span className="text-[10px] text-[#71717a]">|</span>
+            <span className="text-[10px] text-[#a1a1aa]">Ollama (phi3:mini / RTX 4060)</span>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded text-white/40 hover:text-white hover:bg-white/10 transition-all"
+            className="p-1 rounded text-[#71717a] hover:text-white transition-all"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Content Body */}
-        <div className="p-5 overflow-y-auto space-y-4">
-          {/* Natural Language Prompt Input */}
+        <div className="p-4 overflow-y-auto space-y-4">
           <form onSubmit={handleSubmit} className="space-y-3">
-            <label className="text-xs font-bold text-white/80 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-[#76b900]" />
-              <span>Describe what you want simulated robots to do:</span>
+            <label className="text-[11px] font-bold text-white block">
+              Autonomous Robot Directive:
             </label>
 
-            <div className="relative">
-              <textarea
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder='e.g. "Send robot 1 to Room 19", "Deliver emergency medicine to ICU 1", "Guide visitor to Pharmacy"...'
-                rows={3}
-                className="w-full bg-[#161a22] border border-[#272d3b] rounded-lg p-3 text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-[#76b900] focus:ring-1 focus:ring-[#76b900]/40 transition-all resize-none"
-              />
-            </div>
+            <textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder='Enter directive, e.g. "Deliver emergency medication to ICU 1", "Send Rob-1 to Pharmacy"...'
+              rows={3}
+              className="w-full bg-[#000000] border border-[#27272a] rounded p-2.5 text-xs text-white placeholder:text-[#52525b] focus:outline-none focus:border-white transition-all resize-none font-mono"
+            />
 
-            {/* Quick Example Chips */}
+            {/* Quick Directive Chips */}
             <div className="space-y-1.5">
-              <div className="text-[10px] uppercase font-bold text-white/40 tracking-wider">
-                Quick-Start Mission Prompts:
+              <div className="text-[10px] uppercase font-bold text-[#71717a] tracking-wider">
+                Preset Directives:
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {EXAMPLE_PROMPTS.map((ex, idx) => (
@@ -134,7 +112,7 @@ export function AITaskPortalModal({
                     key={idx}
                     type="button"
                     onClick={() => handleSelectExample(ex)}
-                    className="text-[11px] bg-white/5 hover:bg-[#76b900]/20 hover:text-[#76b900] hover:border-[#76b900]/40 text-white/70 px-2.5 py-1 rounded-md border border-white/10 transition-all text-left"
+                    className="text-[11px] bg-[#121214] hover:bg-white hover:text-black text-[#a1a1aa] px-2.5 py-1 rounded border border-[#27272a] transition-all text-left"
                   >
                     {ex}
                   </button>
@@ -143,35 +121,23 @@ export function AITaskPortalModal({
             </div>
 
             {/* Action Buttons */}
-            <div className="pt-2 flex items-center justify-between">
-              <div className="text-[11px] text-white/40 flex items-center gap-1">
-                <Zap className="w-3.5 h-3.5 text-[#76b900]" />
-                <span>Runs 100% locally with zero cloud delay.</span>
-              </div>
+            <div className="pt-2 flex items-center justify-between border-t border-[#27272a]">
+              <span className="text-[10px] text-[#71717a]">Local GPU inference (zero cloud latency).</span>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 text-xs transition-all"
+                  className="px-3 py-1.5 rounded bg-[#18181b] hover:bg-[#27272a] text-[#a1a1aa] text-xs transition-all"
                 >
-                  Close
+                  Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isLoading || !prompt.trim()}
-                  className="px-4 py-1.5 rounded-lg bg-[#76b900] hover:bg-[#68a300] text-black font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-[#76b900]/20 transition-all disabled:opacity-40"
+                  className="px-4 py-1.5 rounded bg-white hover:bg-[#e4e4e7] text-black font-bold text-xs flex items-center gap-1.5 transition-all disabled:opacity-40"
                 >
-                  {isLoading ? (
-                    <>
-                      <div className="w-3 h-3 rounded-full border-2 border-black border-t-transparent animate-spin" />
-                      <span>Interpreting via Ollama...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Dispatch via Ollama</span>
-                      <Send className="w-3.5 h-3.5" />
-                    </>
-                  )}
+                  <span>{isLoading ? "Compiling Plan..." : "Execute Mission"}</span>
+                  <Send className="w-3 h-3" />
                 </button>
               </div>
             </div>
@@ -179,76 +145,47 @@ export function AITaskPortalModal({
 
           {/* Error Message */}
           {error && (
-            <div className="p-3 bg-rose-950/60 border border-rose-800 rounded-lg text-rose-300 text-xs flex items-center gap-2">
-              <X className="w-4 h-4 text-rose-400 shrink-0" />
-              <span>{error}</span>
+            <div className="border border-[#3f3f46] rounded p-3 bg-[#18181b] text-white text-xs">
+              <strong>Error:</strong> {error}
             </div>
           )}
 
-          {/* Real-time LLM Output Card */}
+          {/* Parsed Result Card */}
           {result && (
-            <div className="p-4 bg-[#141822] border border-[#76b900]/50 rounded-xl space-y-3 animate-in fade-in duration-200">
-              <div className="flex items-center justify-between border-b border-white/10 pb-2">
-                <div className="flex items-center gap-2 text-xs font-bold text-[#76b900]">
-                  <CheckCircle2 className="w-4 h-4 text-[#76b900]" />
-                  <span>MISSION DISPATCHED SUCCESSFULLY</span>
-                </div>
-                <span className="text-[10px] bg-[#76b900]/20 text-[#76b900] px-2 py-0.5 rounded border border-[#76b900]/40 uppercase font-semibold">
-                  Parsed by {result.parsed_by || "Ollama"}
+            <div className="border border-[#27272a] rounded p-3 bg-[#000000] space-y-2 text-xs">
+              <div className="flex items-center justify-between text-white font-bold border-b border-[#27272a] pb-1.5">
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-white" />
+                  <span>Mission Assigned to Simulation Engine</span>
                 </span>
+                <span className="text-[10px] text-[#71717a]">PARSED BY: {result.parsed_by?.toUpperCase()}</span>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                <div className="bg-[#11141a] p-2.5 rounded-lg border border-white/5">
-                  <div className="text-[10px] text-white/40 uppercase">Task Type</div>
-                  <div className="font-bold text-white capitalize mt-0.5">
-                    {result.task_type ? result.task_type.replace(/_/g, " ") : "Action"}
-                  </div>
+              <div className="grid grid-cols-2 gap-2 text-[11px] pt-1">
+                <div className="bg-[#121214] p-2 rounded border border-[#18181b]">
+                  <span className="text-[#71717a] block text-[10px]">TASK TYPE</span>
+                  <span className="font-bold text-white">{result.task_type || "Generic Task"}</span>
                 </div>
-
-                <div className="bg-[#11141a] p-2.5 rounded-lg border border-white/5">
-                  <div className="text-[10px] text-white/40 uppercase">Destination</div>
-                  <div className="font-bold text-cyan-400 mt-0.5 flex items-center gap-1">
-                    <MapPin className="w-3 h-3" />
-                    <span>{result.location || "Hospital"}</span>
-                  </div>
+                <div className="bg-[#121214] p-2 rounded border border-[#18181b]">
+                  <span className="text-[#71717a] block text-[10px]">DESTINATION</span>
+                  <span className="font-bold text-white">{result.location || "Main Corridor"}</span>
                 </div>
-
-                <div className="bg-[#11141a] p-2.5 rounded-lg border border-white/5">
-                  <div className="text-[10px] text-white/40 uppercase">Assigned AMR</div>
-                  <div className="font-bold text-[#76b900] mt-0.5 flex items-center gap-1">
-                    <Bot className="w-3 h-3" />
-                    <span>{result.target_robot || "Nearest Available"}</span>
-                  </div>
+                <div className="bg-[#121214] p-2 rounded border border-[#18181b]">
+                  <span className="text-[#71717a] block text-[10px]">ASSIGNED AMR</span>
+                  <span className="font-bold text-white">{result.target_robot || "Auto (Nearest Available)"}</span>
                 </div>
-
-                <div className="bg-[#11141a] p-2.5 rounded-lg border border-white/5">
-                  <div className="text-[10px] text-white/40 uppercase">Priority</div>
-                  <div className="font-bold text-rose-400 mt-0.5">
-                    P{result.priority || 4} Critical
-                  </div>
+                <div className="bg-[#121214] p-2 rounded border border-[#18181b]">
+                  <span className="text-[#71717a] block text-[10px]">PRIORITY</span>
+                  <span className="font-bold text-white">Priority {result.priority || 4}</span>
                 </div>
               </div>
 
               {result.description && (
-                <div className="text-xs text-white/70 bg-[#11141a] p-2.5 rounded-lg border border-white/5 flex items-start gap-2">
-                  <ArrowRight className="w-3.5 h-3.5 text-[#76b900] shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-semibold text-white">Directive: </span>
-                    <span>{result.description}</span>
-                  </div>
+                <div className="text-[11px] text-[#a1a1aa] bg-[#121214] p-2 rounded border border-[#18181b]">
+                  <span className="text-[#71717a] block text-[10px] mb-0.5">DIRECTIVE SUMMARY</span>
+                  {result.description}
                 </div>
               )}
-
-              <div className="flex justify-end pt-1">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-3 py-1 rounded bg-[#76b900]/20 hover:bg-[#76b900]/30 text-[#76b900] text-xs font-bold transition-all border border-[#76b900]/40"
-                >
-                  View AMR Navigation in 3D Viewport →
-                </button>
-              </div>
             </div>
           )}
         </div>

@@ -11,11 +11,7 @@ import {
   ChevronDown,
   ChevronUp,
   Download,
-  Search,
-  AlertCircle,
-  Info,
-  AlertTriangle,
-  Sparkles
+  Search
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -37,11 +33,10 @@ interface BottomConsoleProps {
 
 export function BottomConsole({ snapshot, onSelectEntity, onOpenAITaskPortal, onClose }: BottomConsoleProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [activeTab, setActiveTab] = useState<"tasks" | "events" | "metrics" | "experiments" | "raw">("tasks");
+  const [activeTab, setActiveTab] = useState<"tasks" | "events" | "metrics" | "experiments">("tasks");
   const [eventFilter, setEventFilter] = useState<"ALL" | "INFO" | "WARN" | "ERROR">("ALL");
   const [eventSearch, setEventSearch] = useState("");
 
-  // New task modal
   const [showNewTaskDialog, setShowNewTaskDialog] = useState(false);
   const [newTaskType, setNewTaskType] = useState("assist_patient");
   const [newTaskDest, setNewTaskDest] = useState("Room1");
@@ -51,7 +46,7 @@ export function BottomConsole({ snapshot, onSelectEntity, onOpenAITaskPortal, on
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await createManualTask(newTaskType, newTaskDest, newTaskPrio, newTaskDesc);
+      await createManualTask(newTaskType, newTaskDest, newTaskPrio, newTaskDesc || `Manual ${newTaskType}`);
       setShowNewTaskDialog(false);
       setNewTaskDesc("");
     } catch (err) {
@@ -59,32 +54,30 @@ export function BottomConsole({ snapshot, onSelectEntity, onOpenAITaskPortal, on
     }
   };
 
-  const tasksPending = snapshot?.tasks?.pending || [];
-  const tasksActive = snapshot?.tasks?.active || [];
-  const tasksCompleted = snapshot?.tasks?.completed || [];
+  const tasksActive = snapshot?.tasks.active || [];
+  const tasksPending = snapshot?.tasks.pending || [];
   const events = snapshot?.events || [];
-  const metricsHistory = snapshot?.metrics_history || [];
+  const metrics = snapshot?.metrics || [];
 
-  const filteredEvents = events.filter((e) => {
-    if (eventFilter !== "ALL" && e.severity !== eventFilter) return false;
-    if (eventSearch && !e.message.toLowerCase().includes(eventSearch.toLowerCase())) return false;
+  const filteredEvents = events.filter((ev) => {
+    if (eventFilter !== "ALL" && ev.severity !== eventFilter) return false;
+    if (eventSearch && !ev.message.toLowerCase().includes(eventSearch.toLowerCase())) return false;
     return true;
   });
 
   return (
     <footer
-      className={`bg-[#0a0d14] border-t border-white/10 flex flex-col select-none transition-all duration-200 z-10 ${
+      className={`border-t border-[#27272a] bg-[#09090b] text-[#f4f4f5] font-mono flex flex-col transition-all duration-150 z-20 ${
         isCollapsed ? "h-9" : "h-64"
       }`}
     >
       {/* Console Tab Bar */}
-      <div className="h-9 bg-[#080b10] border-b border-white/10 px-3 flex items-center justify-between text-xs font-mono">
+      <div className="h-9 bg-[#000000] border-b border-[#27272a] px-3 flex items-center justify-between text-xs font-mono">
         <div className="flex items-center gap-1">
           {[
-            { id: "tasks", label: `Tasks (${tasksActive.length + tasksPending.length})`, icon: ListTodo },
-            { id: "events", label: `Events (${events.length})`, icon: Terminal },
-            { id: "metrics", label: "Live Metrics", icon: LineChart },
-            { id: "experiments", label: "Analysis Runs", icon: FlaskConical },
+            { id: "tasks", label: `Missions (${tasksActive.length + tasksPending.length})`, icon: ListTodo },
+            { id: "events", label: `Console Log (${events.length})`, icon: Terminal },
+            { id: "metrics", label: "Fleet Metrics", icon: LineChart },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id && !isCollapsed;
@@ -97,8 +90,8 @@ export function BottomConsole({ snapshot, onSelectEntity, onOpenAITaskPortal, on
                 }}
                 className={`px-3 py-1 rounded-t flex items-center gap-1.5 transition-all ${
                   isActive
-                    ? "bg-[#0c1018] text-cyan-400 font-bold border-t border-x border-cyan-500/30"
-                    : "text-white/50 hover:text-white"
+                    ? "bg-[#18181b] text-white font-bold border-t border-x border-[#3f3f46]"
+                    : "text-[#71717a] hover:text-white"
                 }`}
               >
                 <Icon className="w-3.5 h-3.5" />
@@ -110,30 +103,18 @@ export function BottomConsole({ snapshot, onSelectEntity, onOpenAITaskPortal, on
 
         <div className="flex items-center gap-2">
           {activeTab === "tasks" && !isCollapsed && (
-            <>
-              {onOpenAITaskPortal && (
-                <button
-                  onClick={onOpenAITaskPortal}
-                  className="px-2.5 py-0.5 rounded bg-[#76b900]/20 hover:bg-[#76b900]/30 text-[#76b900] text-[11px] font-bold border border-[#76b900]/40 flex items-center gap-1.5 transition-all shadow-[0_0_10px_rgba(118,185,0,0.2)]"
-                  title="Dispatch tasks with natural language using local Ollama LLM"
-                >
-                  <Sparkles className="w-3 h-3 text-[#76b900]" />
-                  <span>AI Mission Portal (Ollama)</span>
-                </button>
-              )}
-              <button
-                onClick={() => setShowNewTaskDialog(true)}
-                className="px-2 py-0.5 rounded bg-cyan-600/30 hover:bg-cyan-500/40 text-cyan-300 text-[11px] font-bold border border-cyan-500/40 flex items-center gap-1"
-              >
-                <Plus className="w-3 h-3" />
-                <span>Create Task</span>
-              </button>
-            </>
+            <button
+              onClick={() => setShowNewTaskDialog(true)}
+              className="px-2 py-0.5 rounded bg-white hover:bg-[#e4e4e7] text-black text-[11px] font-bold flex items-center gap-1"
+            >
+              <Plus className="w-3 h-3" />
+              <span>Create Task</span>
+            </button>
           )}
 
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="p-1 text-white/50 hover:text-white rounded"
+            className="p-1 text-[#71717a] hover:text-white rounded"
             title={isCollapsed ? "Expand Console" : "Collapse Console"}
           >
             {isCollapsed ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -143,93 +124,103 @@ export function BottomConsole({ snapshot, onSelectEntity, onOpenAITaskPortal, on
 
       {/* Console Body */}
       {!isCollapsed && (
-        <div className="flex-1 overflow-y-auto p-3 text-xs font-mono bg-[#0c1018]">
+        <div className="flex-1 overflow-y-auto p-3 text-xs font-mono bg-[#09090b]">
           {/* TAB 1: TASK QUEUE TABLE */}
           {activeTab === "tasks" && (
             <div className="space-y-3">
-              <div className="grid grid-cols-12 text-[10px] uppercase font-bold text-white/40 border-b border-white/10 pb-1 px-2">
+              <div className="grid grid-cols-12 text-[10px] uppercase font-bold text-[#71717a] border-b border-[#27272a] pb-1 px-2">
                 <div className="col-span-1">ID</div>
-                <div className="col-span-2">Type</div>
+                <div className="col-span-2">Task Type</div>
                 <div className="col-span-2">Destination</div>
-                <div className="col-span-1">Priority</div>
-                <div className="col-span-2">Assigned Robot</div>
+                <div className="col-span-1">Prio</div>
+                <div className="col-span-2">Assigned AMR</div>
                 <div className="col-span-2">Status</div>
-                <div className="col-span-2 text-right">Action</div>
+                <div className="col-span-2 text-right">Actions</div>
               </div>
 
-              {/* Tasks List */}
-              <div className="space-y-1">
-                {[...tasksActive, ...tasksPending].length > 0 ? (
-                  [...tasksActive, ...tasksPending].map((t) => (
+              {tasksActive.length === 0 && tasksPending.length === 0 ? (
+                <div className="text-center py-8 text-[#52525b] text-xs">
+                  Mission queue is empty. Use the top command line or click '+ Mission Dispatch' to schedule a task.
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {/* Active Tasks */}
+                  {tasksActive.map((t) => (
                     <div
                       key={t.id}
-                      className="grid grid-cols-12 text-[11px] py-1.5 px-2 rounded bg-[#111622] hover:bg-white/5 border border-white/5 items-center"
+                      className="grid grid-cols-12 items-center px-2 py-1.5 rounded bg-[#000000] border border-[#27272a] text-[11px] text-white"
                     >
-                      <div className="col-span-1 font-bold text-white/60">#{t.id}</div>
-                      <div className="col-span-2 text-white capitalize">{t.task_type.replace("_", " ")}</div>
-                      <div className="col-span-2 text-cyan-400 font-semibold">{t.location_node}</div>
-                      <div className="col-span-1">
-                        <span
-                          className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${
-                            t.priority === 4
-                              ? "bg-rose-950 text-rose-400 border border-rose-800"
-                              : t.priority === 3
-                              ? "bg-amber-950 text-amber-400 border border-amber-800"
-                              : "bg-blue-950 text-blue-400 border border-blue-800"
-                          }`}
-                        >
-                          P{t.priority}
-                        </span>
+                      <div className="col-span-1 font-bold">#{t.id}</div>
+                      <div className="col-span-2 font-mono">{t.task_type}</div>
+                      <div className="col-span-2 text-[#a1a1aa]">{t.location_node}</div>
+                      <div className="col-span-1 font-mono font-bold">P{t.priority}</div>
+                      <div
+                        className="col-span-2 cursor-pointer underline text-white truncate"
+                        onClick={() => t.assigned_robot && onSelectEntity("robot", t.assigned_robot)}
+                      >
+                        {t.assigned_robot || "-"}
                       </div>
                       <div className="col-span-2">
-                        {t.assigned_robot ? (
-                          <button
-                            onClick={() => onSelectEntity("robot", t.assigned_robot)}
-                            className="text-cyan-400 hover:underline font-semibold"
-                          >
-                            {t.assigned_robot}
-                          </button>
-                        ) : (
-                          <span className="text-white/30 italic">Unassigned</span>
-                        )}
-                      </div>
-                      <div className="col-span-2 uppercase text-[10px] font-bold text-white/70">
-                        {t.status}
+                        <span className="px-2 py-0.5 rounded bg-white text-black font-bold text-[9px] uppercase">
+                          {t.status}
+                        </span>
                       </div>
                       <div className="col-span-2 text-right">
-                        {t.status === "pending" && (
-                          <button
-                            onClick={() => cancelTask(t.id)}
-                            className="px-2 py-0.5 rounded text-[10px] bg-rose-950/60 hover:bg-rose-900 text-rose-300 border border-rose-800"
-                          >
-                            Cancel
-                          </button>
-                        )}
+                        <button
+                          onClick={() => cancelTask(t.id)}
+                          className="px-2 py-0.5 text-[10px] text-[#a1a1aa] hover:text-white border border-[#27272a] hover:border-white rounded"
+                        >
+                          Cancel
+                        </button>
                       </div>
                     </div>
-                  ))
-                ) : (
-                  <div className="text-white/40 text-center py-6 italic">
-                    Task queue idle. No pending or active robot assignments.
-                  </div>
-                )}
-              </div>
+                  ))}
+
+                  {/* Pending Tasks */}
+                  {tasksPending.map((t) => (
+                    <div
+                      key={t.id}
+                      className="grid grid-cols-12 items-center px-2 py-1.5 rounded bg-[#000000]/60 border border-[#27272a] text-[11px] text-[#a1a1aa]"
+                    >
+                      <div className="col-span-1 font-bold">#{t.id}</div>
+                      <div className="col-span-2">{t.task_type}</div>
+                      <div className="col-span-2 text-[#71717a]">{t.location_node}</div>
+                      <div className="col-span-1 font-mono">P{t.priority}</div>
+                      <div className="col-span-2 text-[#52525b]">-</div>
+                      <div className="col-span-2">
+                        <span className="px-1.5 py-0.5 rounded text-[9px] uppercase border border-[#27272a]">
+                          {t.status}
+                        </span>
+                      </div>
+                      <div className="col-span-2 text-right">
+                        <button
+                          onClick={() => cancelTask(t.id)}
+                          className="px-2 py-0.5 text-[10px] text-[#71717a] hover:text-white border border-[#27272a] rounded"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
-          {/* TAB 2: SYSTEM EVENT FEED */}
+          {/* TAB 2: SYSTEM EVENT CONSOLE */}
           {activeTab === "events" && (
             <div className="space-y-2">
-              <div className="flex items-center justify-between pb-2 border-b border-white/10">
-                <div className="flex gap-1.5">
+              <div className="flex items-center justify-between gap-4 pb-2 border-b border-[#27272a]">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-[#71717a]">SEVERITY:</span>
                   {(["ALL", "INFO", "WARN", "ERROR"] as const).map((sev) => (
                     <button
                       key={sev}
                       onClick={() => setEventFilter(sev)}
-                      className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
                         eventFilter === sev
-                          ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30"
-                          : "text-white/40 hover:text-white"
+                          ? "bg-white text-black border-white"
+                          : "text-[#71717a] border-[#27272a] hover:text-white"
                       }`}
                     >
                       {sev}
@@ -237,218 +228,139 @@ export function BottomConsole({ snapshot, onSelectEntity, onOpenAITaskPortal, on
                   ))}
                 </div>
 
-                <div className="relative w-48">
-                  <Search className="w-3 h-3 text-white/40 absolute left-2 top-1.5" />
+                <div className="relative w-64">
+                  <Search className="w-3 h-3 text-[#52525b] absolute left-2 top-2" />
                   <input
                     type="text"
                     value={eventSearch}
                     onChange={(e) => setEventSearch(e.target.value)}
                     placeholder="Search logs..."
-                    className="w-full bg-[#111622] border border-white/10 rounded pl-7 pr-2 py-0.5 text-[10px] text-white"
+                    className="w-full bg-[#000000] border border-[#27272a] rounded pl-7 pr-2 py-1 text-xs text-white placeholder:text-[#52525b] focus:outline-none focus:border-white"
                   />
                 </div>
               </div>
 
-              <div className="space-y-1 max-h-44 overflow-y-auto pr-1">
-                {filteredEvents.length > 0 ? (
-                  [...filteredEvents].reverse().map((evt) => (
-                    <div
-                      key={evt.id}
-                      className="p-1.5 rounded bg-[#111622] border border-white/5 flex items-start gap-2 text-[11px]"
+              <div className="space-y-1 font-mono text-[11px] max-h-44 overflow-y-auto">
+                {filteredEvents.map((ev, i) => (
+                  <div
+                    key={ev.id || i}
+                    className="flex items-start gap-2 py-0.5 px-2 rounded hover:bg-[#18181b]"
+                  >
+                    <span className="text-[#52525b]">[{ev.sim_time ? ev.sim_time.toFixed(1) : "0.0"}s]</span>
+                    <span
+                      className={`font-bold uppercase text-[9px] px-1 rounded ${
+                        ev.severity === "ERROR"
+                          ? "bg-white text-black"
+                          : ev.severity === "WARN"
+                          ? "text-white underline"
+                          : "text-[#a1a1aa]"
+                      }`}
                     >
-                      <span className="text-[10px] font-mono text-cyan-400 whitespace-nowrap pt-0.5">
-                        +{evt.sim_time}s
-                      </span>
-                      <span
-                        className={`text-[9px] px-1 py-0.2 rounded font-bold uppercase whitespace-nowrap ${
-                          evt.severity === "ERROR"
-                            ? "bg-rose-950 text-rose-400 border border-rose-800"
-                            : evt.severity === "WARN"
-                            ? "bg-amber-950 text-amber-400 border border-amber-800"
-                            : "bg-blue-950 text-blue-400 border border-blue-800"
-                        }`}
-                      >
-                        {evt.severity}
-                      </span>
-                      <span className="text-white/40 text-[10px] uppercase whitespace-nowrap">
-                        [{evt.category}]
-                      </span>
-                      <span className="text-white/80 flex-1">{evt.message}</span>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-white/40 text-center py-6 italic">No event logs matching filter.</div>
-                )}
+                      {ev.severity}
+                    </span>
+                    <span className="text-[#71717a]">[{ev.category}]</span>
+                    <span className="text-white flex-1">{ev.message}</span>
+                  </div>
+                ))}
               </div>
             </div>
           )}
 
-          {/* TAB 3: LIVE METRICS CHARTS */}
+          {/* TAB 3: TELEMETRY METRICS */}
           {activeTab === "metrics" && (
-            <div className="h-44 grid grid-cols-2 gap-4">
-              <div className="bg-[#111622] p-2 rounded border border-white/5 flex flex-col">
-                <div className="text-[10px] text-white/60 font-bold uppercase mb-1">
-                  Active Robots vs Completed Tasks Over Time
+            <div className="h-44 w-full">
+              {metrics.length < 2 ? (
+                <div className="flex items-center justify-center h-full text-[#52525b]">
+                  Collecting simulation samples... (updates every 2s)
                 </div>
-                <div className="flex-1">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <ReLineChart data={metricsHistory}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                      <XAxis dataKey="sim_time" stroke="#64748b" tick={{ fontSize: 9 }} />
-                      <YAxis stroke="#64748b" tick={{ fontSize: 9 }} />
-                      <Tooltip
-                        contentStyle={{ backgroundColor: "#0f172a", border: "1px solid rgba(255,255,255,0.1)", fontSize: "10px" }}
-                      />
-                      <Line type="monotone" dataKey="active_robots" stroke="#06b6d4" strokeWidth={2} dot={false} name="Active Robots" />
-                      <Line type="monotone" dataKey="completed_tasks" stroke="#10b981" strokeWidth={2} dot={false} name="Completed Tasks" />
-                    </ReLineChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              <div className="bg-[#111622] p-2 rounded border border-white/5 flex flex-col">
-                <div className="text-[10px] text-white/60 font-bold uppercase mb-1">
-                  Average Fleet Battery Drain Over Time
-                </div>
-                <div className="flex-1">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <ReLineChart data={metricsHistory}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                      <XAxis dataKey="sim_time" stroke="#64748b" tick={{ fontSize: 9 }} />
-                      <YAxis domain={[0, 100]} stroke="#64748b" tick={{ fontSize: 9 }} />
-                      <Tooltip
-                        contentStyle={{ backgroundColor: "#0f172a", border: "1px solid rgba(255,255,255,0.1)", fontSize: "10px" }}
-                      />
-                      <Line type="monotone" dataKey="avg_battery" stroke="#f59e0b" strokeWidth={2} dot={false} name="Avg Battery %" />
-                    </ReLineChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 4: EXPERIMENT RUNS HISTORY */}
-          {activeTab === "experiments" && (
-            <div className="text-white/60 space-y-2">
-              <div className="text-[11px] text-white/80 font-bold">Recorded Simulation Benchmark Runs</div>
-              <div className="border border-white/5 rounded overflow-hidden">
-                <div className="grid grid-cols-6 text-[10px] uppercase font-bold text-white/40 bg-black/40 p-2">
-                  <div>Run ID</div>
-                  <div>Fleet Size</div>
-                  <div>Tasks Done</div>
-                  <div>Completion %</div>
-                  <div>Avg Response</div>
-                  <div>Total Travel</div>
-                </div>
-                <div className="p-2 text-center text-white/40 italic">
-                  Launch runs from the "Labs" tab on the left sidebar to generate comparative performance charts.
-                </div>
-              </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <ReLineChart data={metrics}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                    <XAxis dataKey="sim_time" stroke="#71717a" tick={{ fontSize: 10 }} />
+                    <YAxis stroke="#71717a" tick={{ fontSize: 10 }} />
+                    <Tooltip contentStyle={{ backgroundColor: "#000000", border: "1px solid #3f3f46", fontSize: 11 }} />
+                    <Line type="monotone" dataKey="active_robots" stroke="#ffffff" strokeWidth={2} name="Active AMRs" />
+                    <Line type="monotone" dataKey="avg_battery" stroke="#a1a1aa" strokeWidth={1.5} name="Avg Battery %" />
+                    <Line type="monotone" dataKey="completed_tasks" stroke="#71717a" strokeWidth={1.5} name="Completed" />
+                  </ReLineChart>
+                </ResponsiveContainer>
+              )}
             </div>
           )}
         </div>
       )}
 
-      {/* CREATE NEW TASK MODAL */}
+      {/* Manual Task Creator Dialog Modal */}
       {showNewTaskDialog && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <form
-            onSubmit={handleCreateTask}
-            className="w-full max-w-md bg-[#0c1018] border border-white/10 rounded-lg p-4 font-mono space-y-3"
-          >
-            <div className="flex justify-between items-center border-b border-white/10 pb-2">
-              <h3 className="font-bold text-sm text-white">Create New Robot Task</h3>
-              <button
-                type="button"
-                onClick={() => setShowNewTaskDialog(false)}
-                className="text-white/40 hover:text-white"
-              >
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="w-96 bg-[#09090b] border border-[#27272a] rounded p-4 space-y-3 font-mono">
+            <div className="flex items-center justify-between border-b border-[#27272a] pb-2">
+              <span className="font-bold text-white text-xs">CREATE MANUAL TASK</span>
+              <button onClick={() => setShowNewTaskDialog(false)} className="text-[#71717a] hover:text-white">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div>
-              <label className="text-[10px] text-white/60 block mb-1">Task Type</label>
-              <select
-                value={newTaskType}
-                onChange={(e) => setNewTaskType(e.target.value)}
-                className="w-full bg-[#111622] border border-white/10 rounded p-1.5 text-xs text-white"
-              >
-                <option value="assist_patient">Assist Patient</option>
-                <option value="deliver_medicine">Deliver Medication</option>
-                <option value="guide_patient">Guide Patient / Visitor</option>
-                <option value="check_room">Patrol / Check Room</option>
-                <option value="return_to_charge">Return to Charging Dock</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="text-[10px] text-white/60 block mb-1">Destination</label>
-              <select
-                value={newTaskDest}
-                onChange={(e) => setNewTaskDest(e.target.value)}
-                className="w-full bg-[#111622] border border-white/10 rounded p-1.5 text-xs text-white"
-              >
-                {snapshot?.world?.rooms.map((rm) => (
-                  <option key={rm.id} value={rm.id}>
-                    {rm.name} ({rm.id})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="text-[10px] text-white/60 block mb-1">Priority</label>
-              <div className="flex gap-2">
-                {[
-                  { prio: 1, label: "P1 Low" },
-                  { prio: 2, label: "P2 Normal" },
-                  { prio: 3, label: "P3 High" },
-                  { prio: 4, label: "P4 Critical" },
-                ].map((item) => (
-                  <button
-                    key={item.prio}
-                    type="button"
-                    onClick={() => setNewTaskPrio(item.prio)}
-                    className={`flex-1 py-1 rounded text-[11px] border ${
-                      newTaskPrio === item.prio
-                        ? "bg-cyan-500/20 text-cyan-400 border-cyan-500 font-bold"
-                        : "bg-white/5 text-white/50 border-white/10"
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                ))}
+            <form onSubmit={handleCreateTask} className="space-y-3 text-xs">
+              <div>
+                <label className="text-[10px] text-[#71717a] block mb-1">TASK TYPE</label>
+                <select
+                  value={newTaskType}
+                  onChange={(e) => setNewTaskType(e.target.value)}
+                  className="w-full bg-[#000000] border border-[#27272a] rounded p-1.5 text-white"
+                >
+                  <option value="assist_patient">assist_patient</option>
+                  <option value="deliver_medicine">deliver_medicine</option>
+                  <option value="patrol">patrol</option>
+                  <option value="decontaminate">decontaminate</option>
+                </select>
               </div>
-            </div>
 
-            <div>
-              <label className="text-[10px] text-white/60 block mb-1">Description (Optional)</label>
-              <input
-                type="text"
-                value={newTaskDesc}
-                onChange={(e) => setNewTaskDesc(e.target.value)}
-                placeholder="e.g. Deliver antibiotics to Room 12"
-                className="w-full bg-[#111622] border border-white/10 rounded p-1.5 text-xs text-white"
-              />
-            </div>
+              <div>
+                <label className="text-[10px] text-[#71717a] block mb-1">DESTINATION ROOM</label>
+                <select
+                  value={newTaskDest}
+                  onChange={(e) => setNewTaskDest(e.target.value)}
+                  className="w-full bg-[#000000] border border-[#27272a] rounded p-1.5 text-white"
+                >
+                  {snapshot?.world?.rooms.map((rm) => (
+                    <option key={rm.id} value={rm.id}>{rm.name} ({rm.id})</option>
+                  ))}
+                </select>
+              </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-white/10">
-              <button
-                type="button"
-                onClick={() => setShowNewTaskDialog(false)}
-                className="px-3 py-1.5 rounded bg-white/5 hover:bg-white/10 text-white/70 text-xs"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-1.5 rounded bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs"
-              >
-                Create Task
-              </button>
-            </div>
-          </form>
+              <div>
+                <label className="text-[10px] text-[#71717a] block mb-1">PRIORITY (P1 Low - P4 Critical)</label>
+                <select
+                  value={newTaskPrio}
+                  onChange={(e) => setNewTaskPrio(parseInt(e.target.value))}
+                  className="w-full bg-[#000000] border border-[#27272a] rounded p-1.5 text-white"
+                >
+                  <option value={1}>P1 - Low / Routine</option>
+                  <option value={2}>P2 - Standard</option>
+                  <option value={3}>P3 - Urgent Clinical</option>
+                  <option value={4}>P4 - Critical Emergency</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-[#27272a]">
+                <button
+                  type="button"
+                  onClick={() => setShowNewTaskDialog(false)}
+                  className="px-3 py-1 rounded border border-[#27272a] text-[#a1a1aa] hover:text-white"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-3 py-1 rounded bg-white hover:bg-[#e4e4e7] text-black font-bold"
+                >
+                  Submit Task
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </footer>

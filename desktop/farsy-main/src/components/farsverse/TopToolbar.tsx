@@ -12,9 +12,7 @@ import {
   Layers,
   MapPin,
   Send,
-  Sparkles,
   Bot,
-  Activity,
   Wifi,
   WifiOff,
   FolderOpen,
@@ -24,8 +22,8 @@ import {
   PanelRightOpen,
   PanelBottomClose,
   PanelBottomOpen,
-  Sliders,
-  Cpu
+  Terminal,
+  Grid
 } from "lucide-react";
 import { ConnectionStatus, FARSverseSnapshot, sendControl, sendNaturalCommand } from "@/lib/farsverse-api";
 
@@ -100,98 +98,116 @@ export function TopToolbar({
   };
 
   return (
-    <header className="h-13 bg-[#11141a] border-b border-[#232834] px-3.5 flex items-center justify-between gap-3 select-none z-20 font-mono text-xs text-white">
-      {/* Brand & Project Info (Omniverse Style) */}
-      <div className="flex items-center gap-2.5 min-w-[230px]">
-        {/* NVIDIA Green Brand Badge */}
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded bg-[#76b900] flex items-center justify-center text-black font-extrabold text-xs shadow-md shadow-[#76b900]/30">
-            Ω
-          </div>
-          <div>
-            <div className="text-xs font-bold tracking-wider text-white flex items-center gap-1.5">
-              <span>NVIDIA OMNIVERSE™</span>
-              <span className="text-[9px] bg-[#76b900]/20 text-[#76b900] px-1.5 py-0.2 rounded border border-[#76b900]/40 font-mono font-semibold">
-                ISAAC SIM
-              </span>
-            </div>
-            <div className="text-[10px] text-white/50 flex items-center gap-1">
-              <span>{snapshot?.world?.name || "Digital Twin"}</span>
-            </div>
-          </div>
+    <header className="border-b border-[#27272a] bg-[#09090b] text-[#f4f4f5] flex flex-col select-none z-20 font-mono text-xs">
+      {/* 1. OMNIVERSE CAD MENU BAR */}
+      <div className="h-6 border-b border-[#18181b] bg-[#000000] px-3 flex items-center justify-between text-[11px] text-[#a1a1aa]">
+        <div className="flex items-center gap-4">
+          <span className="font-bold text-[#ffffff] tracking-wider uppercase">NVIDIA Omniverse™</span>
+          <span className="text-[#52525b]">|</span>
+          <span className="text-[#ffffff]">Isaac Sim 2026.2</span>
+          <span className="text-[#52525b]">|</span>
+          <span className="hover:text-white cursor-pointer">File</span>
+          <span className="hover:text-white cursor-pointer">Edit</span>
+          <span className="hover:text-white cursor-pointer">Create</span>
+          <span className="hover:text-white cursor-pointer">Window</span>
+          <span className="hover:text-white cursor-pointer">Physics</span>
+          <span className="hover:text-white cursor-pointer">Tools</span>
+          <span className="hover:text-white cursor-pointer">Help</span>
         </div>
 
-        <button
-          onClick={onOpenProjects}
-          title="Project Library"
-          className="ml-2 text-xs bg-white/5 hover:bg-white/10 text-white/70 hover:text-white px-2.5 py-1 rounded border border-white/10 flex items-center gap-1.5 transition-all"
-        >
-          <FolderOpen className="w-3.5 h-3.5 text-[#76b900]" />
-          <span>Projects</span>
-        </button>
-
-        <button
-          onClick={onOpenAITaskPortal}
-          title="Open AI Mission Planner & Task Creation Portal (Ollama)"
-          className="text-xs bg-[#76b900]/20 hover:bg-[#76b900]/30 text-[#76b900] px-2.5 py-1 rounded border border-[#76b900]/40 flex items-center gap-1.5 transition-all font-bold shadow-md shadow-[#76b900]/20"
-        >
-          <Sparkles className="w-3.5 h-3.5 text-[#76b900]" />
-          <span>+ AI Mission Portal</span>
-        </button>
-
-        <button
-          onClick={onSaveCurrentProject}
-          title="Save USD Project"
-          className="text-xs bg-white/5 hover:bg-white/10 text-white/70 hover:text-white p-1 rounded border border-white/10 transition-all"
-        >
-          <Save className="w-3.5 h-3.5 text-emerald-400" />
-        </button>
+        <div className="flex items-center gap-3 text-[10px]">
+          <span className="text-[#71717a]">PROJECT: <strong className="text-white">{snapshot?.world?.name || "Hospital_GroundFloor.usd"}</strong></span>
+          <div className="flex items-center gap-1">
+            {connectionStatus === "connected" ? (
+              <span className="inline-flex items-center gap-1 text-white">
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                <span>ENGINE 127.0.0.1:8080</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-[#71717a]">
+                <WifiOff className="w-3 h-3 text-[#71717a]" />
+                <span>OFFLINE</span>
+              </span>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Center: Transport Controls & Simulation Clock */}
-      <div className="flex items-center gap-2.5 bg-[#161a22] px-2.5 py-1 rounded border border-[#272d3b] shadow-inner">
-        {/* Play/Pause/Stop/Reset/Step */}
-        <div className="flex items-center gap-0.5">
+      {/* 2. MAIN TOOLBAR CONTROLS */}
+      <div className="h-10 px-3 flex items-center justify-between gap-4 bg-[#09090b]">
+        {/* Left: Project Actions & State */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onOpenProjects}
+            title="USD Project Browser"
+            className="text-xs bg-[#18181b] hover:bg-[#27272a] text-[#ffffff] px-2.5 py-1 rounded border border-[#27272a] flex items-center gap-1.5 transition-all"
+          >
+            <FolderOpen className="w-3.5 h-3.5 text-white" />
+            <span>Stage</span>
+          </button>
+
+          <button
+            onClick={onSaveCurrentProject}
+            title="Save USD Stage"
+            className="text-xs bg-[#18181b] hover:bg-[#27272a] text-[#ffffff] p-1 rounded border border-[#27272a] transition-all"
+          >
+            <Save className="w-3.5 h-3.5 text-white" />
+          </button>
+
+          <button
+            onClick={onOpenAITaskPortal}
+            title="Open Mission Dispatch Terminal"
+            className="text-xs bg-[#ffffff] hover:bg-[#e4e4e7] text-[#000000] px-2.5 py-1 rounded font-bold flex items-center gap-1.5 transition-all"
+          >
+            <span>+ Mission Dispatch</span>
+          </button>
+        </div>
+
+        {/* Center: Clean Transport Controls & Time Code */}
+        <div className="flex items-center gap-2 bg-[#000000] px-3 py-1 rounded border border-[#27272a]">
           <button
             onClick={() => sendControl("play")}
-            title="Start Simulation (Play)"
-            className={`p-1.5 rounded transition-all ${
+            title="Play Simulation"
+            className={`px-2 py-0.5 rounded text-[11px] font-bold flex items-center gap-1 transition-all ${
               status === "RUNNING"
-                ? "bg-[#76b900]/25 text-[#76b900] ring-1 ring-[#76b900]"
-                : "text-white/60 hover:text-white hover:bg-white/10"
+                ? "bg-white text-black font-bold"
+                : "text-[#a1a1aa] hover:text-white hover:bg-[#18181b]"
             }`}
           >
-            <Play className="w-3.5 h-3.5 fill-current" />
+            <Play className="w-3 h-3 fill-current" />
+            <span>PLAY</span>
           </button>
 
           <button
             onClick={() => sendControl("pause")}
             title="Pause Simulation"
-            className={`p-1.5 rounded transition-all ${
+            className={`px-2 py-0.5 rounded text-[11px] font-bold flex items-center gap-1 transition-all ${
               status === "PAUSED"
-                ? "bg-amber-500/25 text-amber-400 ring-1 ring-amber-500"
-                : "text-white/60 hover:text-white hover:bg-white/10"
+                ? "bg-white text-black font-bold"
+                : "text-[#a1a1aa] hover:text-white hover:bg-[#18181b]"
             }`}
           >
-            <Pause className="w-3.5 h-3.5 fill-current" />
+            <Pause className="w-3 h-3 fill-current" />
+            <span>PAUSE</span>
           </button>
 
           <button
             onClick={() => sendControl("stop")}
             title="Stop Simulation"
-            className={`p-1.5 rounded transition-all ${
+            className={`px-2 py-0.5 rounded text-[11px] font-bold flex items-center gap-1 transition-all ${
               status === "STOPPED"
-                ? "bg-rose-500/25 text-rose-400 ring-1 ring-rose-500"
-                : "text-white/60 hover:text-white hover:bg-white/10"
+                ? "bg-[#27272a] text-white"
+                : "text-[#a1a1aa] hover:text-white hover:bg-[#18181b]"
             }`}
           >
-            <Square className="w-3 h-3 fill-current" />
+            <Square className="w-2.5 h-2.5 fill-current" />
+            <span>STOP</span>
           </button>
 
           <button
             onClick={() => sendControl("step", { seconds: 0.5 })}
             title="Step Forward (+0.5s)"
-            className="p-1.5 rounded text-white/60 hover:text-[#76b900] hover:bg-white/10 transition-all"
+            className="p-1 rounded text-[#a1a1aa] hover:text-white hover:bg-[#18181b] transition-all"
           >
             <StepForward className="w-3.5 h-3.5" />
           </button>
@@ -199,169 +215,134 @@ export function TopToolbar({
           <button
             onClick={() => sendControl("reset")}
             title="Reset Simulation Scenario"
-            className="p-1.5 rounded text-white/60 hover:text-rose-400 hover:bg-white/10 transition-all"
+            className="p-1 rounded text-[#a1a1aa] hover:text-white hover:bg-[#18181b] transition-all"
           >
             <RotateCcw className="w-3.5 h-3.5" />
           </button>
+
+          <div className="h-4 w-px bg-[#27272a] mx-1" />
+
+          {/* Time Code */}
+          <div className="font-mono text-xs font-bold text-white px-2">
+            {formattedTime}
+          </div>
+
+          <div className="h-4 w-px bg-[#27272a] mx-1" />
+
+          {/* Speed Multipliers */}
+          <div className="flex items-center gap-1 text-[10px]">
+            {[0.5, 1.0, 2.0, 4.0].map((s) => (
+              <button
+                key={s}
+                onClick={() => sendControl("set_speed", { speed: s })}
+                className={`px-1.5 py-0.5 rounded transition-all ${
+                  speed === s
+                    ? "bg-white text-black font-bold"
+                    : "text-[#71717a] hover:text-white"
+                }`}
+              >
+                {s}x
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="h-4 w-px bg-white/10" />
-
-        {/* Speed Selector */}
-        <div className="flex items-center gap-1 text-[11px]">
-          <span className="text-white/40 text-[10px]">SPEED:</span>
-          {[0.5, 1.0, 2.0, 4.0].map((s) => (
+        {/* Center-Right: Professional Terminal Command Line */}
+        <form onSubmit={handleCommandSubmit} className="flex-1 max-w-md relative">
+          <div className="relative flex items-center">
+            <span className="absolute left-2.5 text-[#71717a] font-bold">&gt;</span>
+            <input
+              type="text"
+              value={commandInput}
+              onChange={(e) => setCommandInput(e.target.value)}
+              placeholder='Direct command: "Send Rob-1 to ICU1", "Block corridor"...'
+              className="w-full bg-[#000000] border border-[#27272a] rounded pl-7 pr-20 py-1 text-xs text-white placeholder:text-[#52525b] focus:outline-none focus:border-white transition-all"
+            />
             <button
-              key={s}
-              onClick={() => sendControl("set_speed", { speed: s })}
-              className={`px-1.5 py-0.5 rounded text-[10px] transition-all ${
-                speed === s
-                  ? "bg-[#76b900]/25 text-[#76b900] font-bold border border-[#76b900]/50"
-                  : "text-white/40 hover:text-white"
+              type="submit"
+              disabled={isSubmittingCmd || !commandInput.trim()}
+              className="absolute right-1 px-2 py-0.5 rounded bg-[#27272a] hover:bg-white hover:text-black text-white text-[10px] font-bold transition-all disabled:opacity-30"
+            >
+              RUN
+            </button>
+          </div>
+        </form>
+
+        {/* Right: Camera & Viewport Tools */}
+        <div className="flex items-center gap-2">
+          {/* Camera Modes */}
+          <div className="flex items-center bg-[#000000] p-0.5 rounded border border-[#27272a] text-xs">
+            <button
+              onClick={() => setCameraMode("angled")}
+              title="Perspective Camera"
+              className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                cameraMode === "angled" ? "bg-white text-black" : "text-[#71717a] hover:text-white"
               }`}
             >
-              {s}x
+              Perspective
             </button>
-          ))}
-        </div>
-
-        <div className="h-4 w-px bg-white/10" />
-
-        {/* Sim Clock */}
-        <div className="flex items-center gap-1.5 text-xs text-[#76b900]">
-          <Activity className="w-3.5 h-3.5" />
-          <span className="font-semibold tracking-wider">{formattedTime}</span>
-        </div>
-      </div>
-
-      {/* Natural Language Command Bar (Ollama Integrated) */}
-      <form onSubmit={handleCommandSubmit} className="flex-1 max-w-md relative">
-        <div className="relative flex items-center">
-          <Cpu className="w-3.5 h-3.5 text-[#76b900] absolute left-3 pointer-events-none" />
-          <input
-            type="text"
-            value={commandInput}
-            onChange={(e) => setCommandInput(e.target.value)}
-            placeholder='Ask: "Send robot 1 to Room 19", "Deliver meds to ICU1"...'
-            className="w-full bg-[#161a22] border border-[#272d3b] rounded pl-8 pr-20 py-1.5 text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-[#76b900] focus:ring-1 focus:ring-[#76b900]/40 transition-all"
-          />
-          <button
-            type="submit"
-            disabled={isSubmittingCmd || !commandInput.trim()}
-            className="absolute right-1 px-2.5 py-0.5 rounded bg-[#76b900]/30 hover:bg-[#76b900]/50 text-[#76b900] text-[10px] font-bold flex items-center gap-1 transition-all disabled:opacity-40"
-          >
-            <span>DISPATCH</span>
-            <Send className="w-2.5 h-2.5" />
-          </button>
-        </div>
-
-        {lastParsedBy && (
-          <div className="absolute right-0 -bottom-4 text-[9px] text-[#76b900]/80 flex items-center gap-1">
-            <span>AI PARSER:</span>
-            <span className="uppercase text-white/80 font-bold">{lastParsedBy} (phi3:mini / RTX 4060)</span>
+            <button
+              onClick={() => setCameraMode("topdown")}
+              title="Top CAD Camera"
+              className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                cameraMode === "topdown" ? "bg-white text-black" : "text-[#71717a] hover:text-white"
+              }`}
+            >
+              Top
+            </button>
+            <button
+              onClick={() => setCameraMode("follow")}
+              title="Chase AMR Camera"
+              className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                cameraMode === "follow" ? "bg-white text-black" : "text-[#71717a] hover:text-white"
+              }`}
+            >
+              Chase
+            </button>
           </div>
-        )}
-      </form>
 
-      {/* Viewport Modes, Panels, & Connection */}
-      <div className="flex items-center gap-2">
-        {/* Camera Views */}
-        <div className="flex items-center gap-0.5 bg-[#161a22] p-1 rounded border border-[#272d3b] text-xs">
-          <button
-            onClick={() => setCameraMode("angled")}
-            title="Angled Perspective"
-            className={`px-2 py-0.5 rounded text-[11px] flex items-center gap-1 ${
-              cameraMode === "angled" ? "bg-[#76b900] text-black font-bold" : "text-white/50 hover:text-white"
-            }`}
-          >
-            <Compass className="w-3 h-3" />
-            <span>Angled</span>
-          </button>
-          <button
-            onClick={() => setCameraMode("topdown")}
-            title="Top-Down CAD Blueprint"
-            className={`px-2 py-0.5 rounded text-[11px] flex items-center gap-1 ${
-              cameraMode === "topdown" ? "bg-[#76b900] text-black font-bold" : "text-white/50 hover:text-white"
-            }`}
-          >
-            <Layers className="w-3 h-3" />
-            <span>Top</span>
-          </button>
-          <button
-            onClick={() => setCameraMode("follow")}
-            title="Follow Selected AMR"
-            className={`px-2 py-0.5 rounded text-[11px] flex items-center gap-1 ${
-              cameraMode === "follow" ? "bg-[#76b900] text-black font-bold" : "text-white/50 hover:text-white"
-            }`}
-          >
-            <Bot className="w-3 h-3" />
-            <span>Chase</span>
-          </button>
-        </div>
+          {/* Overlays */}
+          <div className="flex items-center bg-[#000000] p-0.5 rounded border border-[#27272a]">
+            <button
+              onClick={() => setShowGrid(!showGrid)}
+              title="Toggle Ground Grid"
+              className={`p-1 rounded ${showGrid ? "text-white bg-[#27272a]" : "text-[#52525b]"}`}
+            >
+              <Grid className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setShowPaths(!showPaths)}
+              title="Toggle Waypoint Trajectories"
+              className={`p-1 rounded ${showPaths ? "text-white bg-[#27272a]" : "text-[#52525b]"}`}
+            >
+              <MapPin className="w-3.5 h-3.5" />
+            </button>
+          </div>
 
-        {/* Viewport Overlays */}
-        <div className="flex items-center gap-0.5 bg-[#161a22] p-1 rounded border border-[#272d3b]">
-          <button
-            onClick={() => setShowPaths(!showPaths)}
-            title="Toggle A* Navigation Waypoint Route Lines"
-            className={`p-1 rounded ${showPaths ? "text-[#76b900] bg-[#76b900]/20" : "text-white/30"}`}
-          >
-            <MapPin className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={() => setShowGrid(!showGrid)}
-            title="Toggle CAD Grid"
-            className={`p-1 rounded ${showGrid ? "text-[#76b900] bg-[#76b900]/20" : "text-white/30"}`}
-          >
-            <Layers className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        {/* Omniverse Dockable Panel Toggles */}
-        <div className="flex items-center gap-0.5 bg-[#161a22] p-1 rounded border border-[#272d3b]">
-          <button
-            onClick={() => setShowLeftPanel(!showLeftPanel)}
-            title={showLeftPanel ? "Hide Stage Explorer" : "Show Stage Explorer"}
-            className={`p-1 rounded ${showLeftPanel ? "text-[#76b900] bg-[#76b900]/20" : "text-white/30"}`}
-          >
-            {showLeftPanel ? <PanelLeftClose className="w-3.5 h-3.5" /> : <PanelLeftOpen className="w-3.5 h-3.5" />}
-          </button>
-          <button
-            onClick={() => setShowRightPanel(!showRightPanel)}
-            title={showRightPanel ? "Hide Property Inspector" : "Show Property Inspector"}
-            className={`p-1 rounded ${showRightPanel ? "text-[#76b900] bg-[#76b900]/20" : "text-white/30"}`}
-          >
-            {showRightPanel ? <PanelRightClose className="w-3.5 h-3.5" /> : <PanelRightOpen className="w-3.5 h-3.5" />}
-          </button>
-          <button
-            onClick={() => setShowBottomPanel(!showBottomPanel)}
-            title={showBottomPanel ? "Hide Timeline Console" : "Show Timeline Console"}
-            className={`p-1 rounded ${showBottomPanel ? "text-[#76b900] bg-[#76b900]/20" : "text-white/30"}`}
-          >
-            {showBottomPanel ? <PanelBottomClose className="w-3.5 h-3.5" /> : <PanelBottomOpen className="w-3.5 h-3.5" />}
-          </button>
-        </div>
-
-        {/* WebSocket Live Pill */}
-        <div
-          title={`Status: ${connectionStatus}`}
-          className={`px-2 py-0.5 rounded text-[10px] flex items-center gap-1.5 border ${
-            connectionStatus === "connected"
-              ? "bg-[#76b900]/15 text-[#76b900] border-[#76b900]/40"
-              : "bg-rose-950/50 text-rose-400 border-rose-800"
-          }`}
-        >
-          {connectionStatus === "connected" ? (
-            <>
-              <div className="w-2 h-2 rounded-full bg-[#76b900] animate-pulse" />
-              <span className="font-bold">LIVE</span>
-            </>
-          ) : (
-            <>
-              <WifiOff className="w-3 h-3 text-rose-400" />
-              <span>OFFLINE</span>
-            </>
-          )}
+          {/* Panel Toggles */}
+          <div className="flex items-center bg-[#000000] p-0.5 rounded border border-[#27272a]">
+            <button
+              onClick={() => setShowLeftPanel(!showLeftPanel)}
+              title="Toggle Stage Panel"
+              className={`p-1 rounded ${showLeftPanel ? "text-white" : "text-[#52525b]"}`}
+            >
+              {showLeftPanel ? <PanelLeftClose className="w-3.5 h-3.5" /> : <PanelLeftOpen className="w-3.5 h-3.5" />}
+            </button>
+            <button
+              onClick={() => setShowBottomPanel(!showBottomPanel)}
+              title="Toggle Console Panel"
+              className={`p-1 rounded ${showBottomPanel ? "text-white" : "text-[#52525b]"}`}
+            >
+              {showBottomPanel ? <PanelBottomClose className="w-3.5 h-3.5" /> : <PanelBottomOpen className="w-3.5 h-3.5" />}
+            </button>
+            <button
+              onClick={() => setShowRightPanel(!showRightPanel)}
+              title="Toggle Property Inspector"
+              className={`p-1 rounded ${showRightPanel ? "text-white" : "text-[#52525b]"}`}
+            >
+              {showRightPanel ? <PanelRightClose className="w-3.5 h-3.5" /> : <PanelRightOpen className="w-3.5 h-3.5" />}
+            </button>
+          </div>
         </div>
       </div>
     </header>

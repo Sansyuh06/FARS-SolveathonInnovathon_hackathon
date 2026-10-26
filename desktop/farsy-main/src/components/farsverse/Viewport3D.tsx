@@ -141,7 +141,7 @@ export function Viewport3D({
     const height = container.clientHeight || 600;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0e1117); // Omniverse titanium slate
+    scene.background = new THREE.Color(0x050505); // Pure deep void black
     sceneRef.current = scene;
 
     const camera = new THREE.PerspectiveCamera(42, width / height, 0.5, 400);
@@ -184,28 +184,28 @@ export function Viewport3D({
     };
     controlsRef.current = controls;
 
-    // Omniverse Studio Lighting Setup: Clean, sharp PBR lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.4);
+    // Omniverse Studio Lighting Setup: Clean, sharp neutral PBR lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
     scene.add(ambientLight);
 
     // Primary High Key Light
-    const keyLight = new THREE.DirectionalLight(0xf8fafc, 1.3);
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.4);
     keyLight.position.set(45, 75, 30);
     scene.add(keyLight);
 
-    // Secondary Cyan Industrial Fill Light
-    const fillLight = new THREE.DirectionalLight(0x93c5fd, 0.7);
+    // Secondary Neutral Fill Light
+    const fillLight = new THREE.DirectionalLight(0xd4d4d8, 0.6);
     fillLight.position.set(-45, 50, -35);
     scene.add(fillLight);
 
     // Subtle Omniverse Ground Bounce Light
-    const groundBounce = new THREE.HemisphereLight(0x1e293b, 0x0f172a, 0.6);
+    const groundBounce = new THREE.HemisphereLight(0x27272a, 0x09090b, 0.5);
     scene.add(groundBounce);
 
-    // Monolithic Industrial Epoxy Floor
+    // Monolithic Industrial Black Epoxy Floor
     const floorGeo = new THREE.PlaneGeometry(180, 180);
     const floorMat = new THREE.MeshStandardMaterial({
-      color: 0x11151e,
+      color: 0x0c0c0e,
       roughness: 0.35,
       metalness: 0.25,
     });
@@ -213,8 +213,8 @@ export function Viewport3D({
     floor.rotation.x = -Math.PI / 2;
     scene.add(floor);
 
-    // High-Tech Industrial Grid
-    const grid = new THREE.GridHelper(160, 80, 0x334155, 0x1e293b);
+    // High-Tech Monochrome CAD Grid
+    const grid = new THREE.GridHelper(160, 80, 0x27272a, 0x141416);
     grid.position.y = 0.015;
     scene.add(grid);
     gridHelperRef.current = grid;
@@ -458,9 +458,9 @@ export function Viewport3D({
       opacity: 0.28,
     });
 
-    // Central Hallway Painted Navigation Guidelines
+    // Central Hallway Navigation Guidelines
     const hallwayPadMat = new THREE.MeshStandardMaterial({
-      color: 0x161b26,
+      color: 0x141416,
       roughness: 0.4,
       metalness: 0.2,
     });
@@ -475,7 +475,7 @@ export function Viewport3D({
     corrGroup.add(cross);
 
     // Painted Center Line (Subtle white runway dashes)
-    const dashMat = new THREE.MeshBasicMaterial({ color: 0x475569 });
+    const dashMat = new THREE.MeshBasicMaterial({ color: 0x52525b });
     for (let z = -28; z <= 28; z += 3) {
       const dash = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.025, 1.4), dashMat);
       dash.position.set(0, 0.02, z);
@@ -487,16 +487,10 @@ export function Viewport3D({
       const roomGroup = new THREE.Group();
       roomGroup.userData = { roomId: room.id, roomName: room.name };
 
-      // Room Floor Pad with Chamfered Border
-      let floorColor = 0x181e2b; // Slate for patient rooms
-      if (room.type === "icu") floorColor = 0x132328; // Medical Teal
-      else if (room.type === "pharmacy") floorColor = 0x14271f; // Clean Emerald
-      else if (room.type === "emergency") floorColor = 0x2b181b; // High-alert Crimson
-      else if (room.type === "dock") floorColor = 0x291d12; // Amber Dock
-
+      // Room Floor Pad (Monochrome Architectural Floor)
       const padGeo = new THREE.BoxGeometry(room.width, 0.06, room.depth);
       const padMat = new THREE.MeshStandardMaterial({
-        color: floorColor,
+        color: 0x18181b,
         roughness: 0.45,
         metalness: 0.2,
       });
@@ -504,9 +498,9 @@ export function Viewport3D({
       pad.position.set(room.x, 0.03, room.z);
       roomGroup.add(pad);
 
-      // Hazard Stripes for Charging Dock
+      // Docking Striping for Charging Dock
       if (room.type === "dock") {
-        const hazardMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b });
+        const hazardMat = new THREE.MeshBasicMaterial({ color: 0x71717a });
         for (let i = -room.width / 2 + 1; i < room.width / 2; i += 2) {
           const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.07, room.depth * 0.9), hazardMat);
           stripe.rotation.y = Math.PI / 4;
@@ -514,13 +508,13 @@ export function Viewport3D({
           roomGroup.add(stripe);
         }
 
-        // 5 Industrial Inductive Charging Pads
+        // 5 Industrial Inductive Charging Pads (Monochrome Titanium)
         for (let p = -2; p <= 2; p++) {
           const dockPad = new THREE.Mesh(
             new THREE.CylinderGeometry(0.9, 0.9, 0.04, 16),
             new THREE.MeshStandardMaterial({
-              color: 0x0284c7,
-              emissive: 0x0369a1,
+              color: 0x27272a,
+              metalness: 0.5,
               roughness: 0.3,
             })
           );
@@ -666,12 +660,10 @@ export function Viewport3D({
       let entry = map.get(robot.id);
       const isSelected = selectedEntity?.type === "robot" && selectedEntity?.id === robot.id;
 
-      // Status Colors
-      let haloColorHex = 0x76b900; // NVIDIA Isaac Green
-      if (robot.state === "NAVIGATING") haloColorHex = 0x06b6d4; // Cyan
-      else if (robot.state === "CHARGING") haloColorHex = 0xf59e0b; // Amber
-      else if (robot.state === "ERROR" || robot.battery < 15) haloColorHex = 0xef4444; // Red
-      else if (robot.state === "ASSISTING" || robot.state === "DELIVERING") haloColorHex = 0xa855f7; // Purple
+      // Monochrome Industrial Status Tone
+      let haloColorHex = 0xffffff; // Crisp White
+      if (robot.state === "CHARGING") haloColorHex = 0xa1a1aa;
+      else if (robot.state === "ERROR" || robot.battery < 15) haloColorHex = 0x71717a;
 
       // Build Nova Carter Robot Mesh Once
       if (!entry) {
@@ -742,9 +734,9 @@ export function Viewport3D({
         // 7. LiDAR Active Laser Scanner Fan Projection
         const laserFanGeo = new THREE.ConeGeometry(2.4, 0.02, 16, 1, false, -Math.PI / 4, Math.PI / 2);
         const laserFanMat = new THREE.MeshBasicMaterial({
-          color: 0x76b900,
+          color: 0xffffff,
           transparent: true,
-          opacity: 0.16,
+          opacity: 0.12,
           side: THREE.DoubleSide,
         });
         const laserFan = new THREE.Mesh(laserFanGeo, laserFanMat);
@@ -763,7 +755,7 @@ export function Viewport3D({
         // 9. Emergency Stop Button (Rear Deck)
         const estop = new THREE.Mesh(
           new THREE.CylinderGeometry(0.06, 0.06, 0.05, 8),
-          new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.3 })
+          new THREE.MeshStandardMaterial({ color: 0x27272a, roughness: 0.3 })
         );
         estop.position.set(0.35, 0.52, -0.35);
         rGroup.add(estop);
@@ -772,7 +764,7 @@ export function Viewport3D({
         const selBracket = new THREE.Group();
         const selRing = new THREE.Mesh(
           new THREE.RingGeometry(1.05, 1.2, 32),
-          new THREE.MeshBasicMaterial({ color: 0x76b900, side: THREE.DoubleSide })
+          new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide })
         );
         selRing.rotation.x = -Math.PI / 2;
         selRing.position.y = 0.04;
@@ -1059,11 +1051,11 @@ export function Viewport3D({
             title="Pan (Move Across Floor with Left-Click Drag)"
             className={`px-2 py-1 rounded text-[10px] font-bold flex items-center justify-center gap-1 transition-all ${
               navMode === "pan"
-                ? "bg-[#76b900] text-black shadow-md shadow-[#76b900]/30"
+                ? "bg-white text-black"
                 : "text-white/60 hover:text-white hover:bg-white/10"
             }`}
           >
-            <span>✋ Pan</span>
+            <span>Pan</span>
           </button>
         </div>
 
@@ -1073,7 +1065,7 @@ export function Viewport3D({
           <button
             onClick={() => handlePan(0, -6)}
             title="Pan North (Forward)"
-            className="w-7 h-7 bg-white/5 hover:bg-[#76b900]/20 hover:text-[#76b900] rounded flex items-center justify-center text-xs text-white/70 border border-white/10 transition-all active:scale-95"
+            className="w-7 h-7 bg-white/5 hover:bg-white hover:text-black rounded flex items-center justify-center text-xs text-white/70 border border-white/10 transition-all active:scale-95"
           >
             ▲
           </button>
@@ -1081,21 +1073,21 @@ export function Viewport3D({
           <button
             onClick={() => handlePan(-6, 0)}
             title="Pan West (Left)"
-            className="w-7 h-7 bg-white/5 hover:bg-[#76b900]/20 hover:text-[#76b900] rounded flex items-center justify-center text-xs text-white/70 border border-white/10 transition-all active:scale-95"
+            className="w-7 h-7 bg-white/5 hover:bg-white hover:text-black rounded flex items-center justify-center text-xs text-white/70 border border-white/10 transition-all active:scale-95"
           >
             ◀
           </button>
           <button
             onClick={handleResetView}
             title="Fit / Center View"
-            className="w-7 h-7 bg-[#76b900]/15 hover:bg-[#76b900]/30 text-[#76b900] font-bold rounded flex items-center justify-center text-[10px] border border-[#76b900]/30 transition-all active:scale-95"
+            className="w-7 h-7 bg-white text-black font-bold rounded flex items-center justify-center text-[10px] border border-white transition-all active:scale-95"
           >
             ⛶
           </button>
           <button
             onClick={() => handlePan(6, 0)}
             title="Pan East (Right)"
-            className="w-7 h-7 bg-white/5 hover:bg-[#76b900]/20 hover:text-[#76b900] rounded flex items-center justify-center text-xs text-white/70 border border-white/10 transition-all active:scale-95"
+            className="w-7 h-7 bg-white/5 hover:bg-white hover:text-black rounded flex items-center justify-center text-xs text-white/70 border border-white/10 transition-all active:scale-95"
           >
             ▶
           </button>
@@ -1103,7 +1095,7 @@ export function Viewport3D({
           <button
             onClick={() => handlePan(0, 6)}
             title="Pan South (Backward)"
-            className="w-7 h-7 bg-white/5 hover:bg-[#76b900]/20 hover:text-[#76b900] rounded flex items-center justify-center text-xs text-white/70 border border-white/10 transition-all active:scale-95"
+            className="w-7 h-7 bg-white/5 hover:bg-white hover:text-black rounded flex items-center justify-center text-xs text-white/70 border border-white/10 transition-all active:scale-95"
           >
             ▼
           </button>
@@ -1115,14 +1107,14 @@ export function Viewport3D({
           <button
             onClick={() => handleZoom("in")}
             title="Zoom In (+)"
-            className="w-8 h-7 bg-white/5 hover:bg-[#76b900]/20 hover:text-[#76b900] rounded flex items-center justify-center text-sm font-bold text-white/80 border border-white/10 transition-all active:scale-95"
+            className="w-8 h-7 bg-white/5 hover:bg-white hover:text-black rounded flex items-center justify-center text-sm font-bold text-white/80 border border-white/10 transition-all active:scale-95"
           >
             +
           </button>
           <button
             onClick={() => handleZoom("out")}
             title="Zoom Out (-)"
-            className="w-8 h-7 bg-white/5 hover:bg-[#76b900]/20 hover:text-[#76b900] rounded flex items-center justify-center text-sm font-bold text-white/80 border border-white/10 transition-all active:scale-95"
+            className="w-8 h-7 bg-white/5 hover:bg-white hover:text-black rounded flex items-center justify-center text-sm font-bold text-white/80 border border-white/10 transition-all active:scale-95"
           >
             -
           </button>
