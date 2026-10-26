@@ -102,6 +102,26 @@ pending_ollama_tasks = []
 cam = None
 
 
+import socket
+import threading
+import struct
+
+stream_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+stream_server.bind(('127.0.0.1', 8081))
+stream_server.listen(1)
+stream_conn = None
+
+def accept_conn():
+    global stream_conn
+    while True:
+        try:
+            conn, addr = stream_server.accept()
+            stream_conn = conn
+        except:
+            pass
+
+threading.Thread(target=accept_conn, daemon=True).start()
+
 # ======================================================================
 #  Setup
 # ======================================================================
@@ -146,11 +166,22 @@ def setup():
     cam = CameraController()
 
 
+
 # ======================================================================
 #  Main update loop
 # ======================================================================
 def update():
-    global patients_assisted_count
+    global patients_assisted_count, stream_conn
+
+    if stream_conn:
+        try:
+            tex = base.win.getDisplayRegion(0).getScreenshot()
+            if tex:
+                data = tex.getRamImageAs("RGBA").get_data()
+                stream_conn.sendall(struct.pack("<LII", len(data), tex.getXSize(), tex.getYSize()))
+                stream_conn.sendall(data)
+        except Exception:
+            stream_conn = None
 
     dt = time.dt
     if dt <= 0:

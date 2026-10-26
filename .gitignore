@@ -54,3 +54,5 @@ requirements.txt
 *package.json
 
 
+*.db-shm
+*.db-wal
