@@ -100,7 +100,7 @@ export function TopToolbar({
   };
 
   return (
-    <header className="border-b border-[#222634] bg-[#0a0c10] text-[#f4f4f5] flex flex-col select-none z-20 font-mono text-xs">
+    <header className="border-b border-[#222634] bg-[#0a0c10] text-[#f4f4f5] flex flex-col select-none z-20 font-sans text-xs">
       {/* 1. FARS STUDIO CAD TOP MENU BAR */}
       <div className="h-6 border-b border-[#181a22] bg-[#050608] px-3 flex items-center justify-between text-[11px] text-[#94a3b8]">
         <div className="flex items-center gap-4">
@@ -263,7 +263,7 @@ export function TopToolbar({
               value={commandInput}
               onChange={(e) => setCommandInput(e.target.value)}
               placeholder='Enter mission directive: "Send FARS-01 to ICU1", "Patrol Pharmacy"...'
-              className="w-full bg-[#050608] border border-[#222634] rounded pl-16 pr-16 py-1.5 text-xs text-white placeholder:text-[#475569] focus:outline-none focus:border-white transition-all font-mono"
+              className="w-full bg-[#050608] border border-[#222634] rounded pl-16 pr-16 py-1.5 text-xs text-white placeholder:text-[#475569] focus:outline-none focus:border-white transition-all font-sans"
             />
             <button
               type="submit"

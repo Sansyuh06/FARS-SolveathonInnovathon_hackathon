@@ -68,7 +68,7 @@ export function AITaskPortalModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 font-mono select-none">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 font-sans select-none">
       <div className="w-full max-w-2xl bg-[#09090b] border border-[#27272a] rounded-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="h-12 border-b border-[#27272a] bg-[#000000] px-4 flex items-center justify-between">
@@ -98,7 +98,7 @@ export function AITaskPortalModal({
               onChange={(e) => setPrompt(e.target.value)}
               placeholder='Enter directive, e.g. "Deliver emergency medication to ICU 1", "Send Rob-1 to Pharmacy"...'
               rows={3}
-              className="w-full bg-[#000000] border border-[#27272a] rounded p-2.5 text-xs text-white placeholder:text-[#52525b] focus:outline-none focus:border-white transition-all resize-none font-mono"
+              className="w-full bg-[#000000] border border-[#27272a] rounded p-2.5 text-xs text-white placeholder:text-[#52525b] focus:outline-none focus:border-white transition-all resize-none font-sans"
             />
 
             {/* Quick Directive Chips */}

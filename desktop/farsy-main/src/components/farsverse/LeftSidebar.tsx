@@ -88,7 +88,7 @@ export function LeftSidebar({
   };
 
   return (
-    <aside className="w-80 bg-[#0a0c10] border-r border-[#222634] flex flex-col h-full select-none text-xs font-mono text-[#f4f4f5]">
+    <aside className="w-80 bg-[#0a0c10] border-r border-[#222634] flex flex-col h-full select-none text-xs font-sans text-[#f4f4f5]">
       {/* Sub-navigation Tabs */}
       <div className="flex items-center justify-between border-b border-[#222634] bg-[#050608] p-1 text-[11px]">
         {[

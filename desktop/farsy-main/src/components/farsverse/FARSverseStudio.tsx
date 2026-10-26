@@ -99,7 +99,7 @@ export default function FARSverseStudio() {
   };
 
   return (
-    <div className="h-screen w-screen bg-[#000000] flex flex-col overflow-hidden text-[#f4f4f5] font-mono select-none">
+    <div className="h-screen w-screen bg-[#000000] flex flex-col overflow-hidden text-[#f4f4f5] font-sans antialiased select-none">
       {/* Disconnection Warning Bar */}
       {connectionStatus !== "connected" && (
         <div className="bg-rose-950/80 border-b border-rose-800 text-rose-200 px-4 py-1 text-xs flex items-center justify-between z-30">

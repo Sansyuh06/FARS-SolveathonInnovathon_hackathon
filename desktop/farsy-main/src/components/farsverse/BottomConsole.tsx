@@ -67,12 +67,12 @@ export function BottomConsole({ snapshot, onSelectEntity, onOpenAITaskPortal, on
 
   return (
     <footer
-      className={`border-t border-[#27272a] bg-[#09090b] text-[#f4f4f5] font-mono flex flex-col transition-all duration-150 z-20 ${
+      className={`border-t border-[#27272a] bg-[#09090b] text-[#f4f4f5] font-sans flex flex-col transition-all duration-150 z-20 ${
         isCollapsed ? "h-9" : "h-64"
       }`}
     >
       {/* Console Tab Bar */}
-      <div className="h-9 bg-[#000000] border-b border-[#27272a] px-3 flex items-center justify-between text-xs font-mono">
+      <div className="h-9 bg-[#000000] border-b border-[#27272a] px-3 flex items-center justify-between text-xs font-sans">
         <div className="flex items-center gap-1">
           {[
             { id: "tasks", label: `Missions (${tasksActive.length + tasksPending.length})`, icon: ListTodo },
@@ -124,7 +124,7 @@ export function BottomConsole({ snapshot, onSelectEntity, onOpenAITaskPortal, on
 
       {/* Console Body */}
       {!isCollapsed && (
-        <div className="flex-1 overflow-y-auto p-3 text-xs font-mono bg-[#09090b]">
+        <div className="flex-1 overflow-y-auto p-3 text-xs font-sans bg-[#09090b]">
           {/* TAB 1: TASK QUEUE TABLE */}
           {activeTab === "tasks" && (
             <div className="space-y-3">

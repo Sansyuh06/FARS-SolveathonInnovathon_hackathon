@@ -987,7 +987,7 @@ export function Viewport3D({
   }, [snapshot?.humans, selectedEntity]);
 
   return (
-    <div className="relative w-full h-full bg-[#050608] overflow-hidden select-none font-mono" ref={containerRef}>
+    <div className="relative w-full h-full bg-[#050608] overflow-hidden select-none font-sans" ref={containerRef}>
       {/* ------------------------------------------------------------- */}
       {/* Top Left: FARS Simulation Core HUD                            */}
       {/* ------------------------------------------------------------- */}
@@ -1147,13 +1147,13 @@ function renderFARSLabelCanvas(
 
   // Robot ID text
   ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 22px monospace";
+  ctx.font = "600 22px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
   ctx.textAlign = "left";
   ctx.fillText(robotId, 22, 36);
 
   // Battery percentage
   ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 19px monospace";
+  ctx.font = "600 19px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
   ctx.textAlign = "right";
   ctx.fillText(`${battery}%`, 232, 36);
 
@@ -1167,7 +1167,7 @@ function renderFARSLabelCanvas(
 
   // State text
   ctx.fillStyle = "rgba(255, 255, 255, 0.65)";
-  ctx.font = "14px monospace";
+  ctx.font = "500 14px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
   ctx.textAlign = "left";
   ctx.fillText(state, 22, 78);
 }
@@ -1187,7 +1187,7 @@ function createFARSRoomSign(name: string): THREE.Sprite {
   ctx.stroke();
 
   ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 20px monospace";
+  ctx.font = "700 20px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(name.toUpperCase(), 128, 50);
