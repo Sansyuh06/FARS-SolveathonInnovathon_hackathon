@@ -32,7 +32,10 @@ fars_platform/data/*.txt
 .DS_Store
 Thumbs.db
 
-# Unity specific ignores
+# Build artifacts
+build/
+*.spec
+
 /[Ff]ars_[Uu]nity/[Ff]ars_[Uu]nity/[Ll]ibrary/
 /[Ff]ars_[Uu]nity/[Ff]ars_[Uu]nity/[Tt]emp/
 /[Ff]ars_[Uu]nity/[Ff]ars_[Uu]nity/[Oo]bj/
