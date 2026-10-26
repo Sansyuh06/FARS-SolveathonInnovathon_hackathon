@@ -28,7 +28,7 @@ export default function FARSverseStudio() {
   const [showGrid, setShowGrid] = useState(true);
   const [showLabels, setShowLabels] = useState(true);
 
-  // Omniverse Dockable Panels Visibility
+  // FARS Studio Dockable Panels Visibility
   const [showLeftPanel, setShowLeftPanel] = useState(true);
   const [showRightPanel, setShowRightPanel] = useState(true);
   const [showBottomPanel, setShowBottomPanel] = useState(true);

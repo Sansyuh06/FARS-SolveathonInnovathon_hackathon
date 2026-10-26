@@ -19,7 +19,9 @@ import {
   AlertTriangle,
   ChevronRight,
   ChevronDown,
-  Upload
+  Upload,
+  Radio,
+  Activity
 } from "lucide-react";
 import {
   FARSverseSnapshot,
@@ -46,19 +48,13 @@ export function LeftSidebar({
   onOpenAssetUpload,
   onClose,
 }: LeftSidebarProps) {
-  const [activeTab, setActiveTab] = useState<"stage" | "rl" | "experiments" | "projects">("stage");
+  const [activeTab, setActiveTab] = useState<"stage" | "fleet" | "rl" | "projects">("stage");
   const [hierarchyFilter, setHierarchyFilter] = useState("");
 
   const [robotsOpen, setRobotsOpen] = useState(true);
   const [humansOpen, setHumansOpen] = useState(true);
   const [roomsOpen, setRoomsOpen] = useState(true);
   const [obstaclesOpen, setObstaclesOpen] = useState(true);
-
-  // Experiment state
-  const [expRobotCount, setExpRobotCount] = useState(3);
-  const [expNumTasks, setExpNumTasks] = useState(15);
-  const [expLoading, setExpLoading] = useState(false);
-  const [expResult, setExpResult] = useState<any>(null);
 
   // RL Training state
   const [rlEpisodes, setRlEpisodes] = useState(40);
@@ -79,22 +75,6 @@ export function LeftSidebar({
     (o) => o.id.toLowerCase().includes(filter) || o.name.toLowerCase().includes(filter)
   );
 
-  const handleRunExperiment = async () => {
-    setExpLoading(true);
-    try {
-      const res = await runExperimentBenchmark(
-        expRobotCount,
-        expNumTasks,
-        snapshot?.world?.environment_type || "hospital"
-      );
-      setExpResult(res);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setExpLoading(false);
-    }
-  };
-
   const handleTrainRL = async () => {
     setRlLoading(true);
     try {
@@ -107,29 +87,15 @@ export function LeftSidebar({
     }
   };
 
-  const handleDownloadExperimentCSV = () => {
-    if (!expResult) return;
-    const headers = Object.keys(expResult).join(",");
-    const values = Object.values(expResult).join(",");
-    const csvContent = "data:text/csv;charset=utf-8," + headers + "\n" + values;
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `farsverse_experiment_${expResult.run_id}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   return (
-    <aside className="w-80 bg-[#09090b] border-r border-[#27272a] flex flex-col h-full select-none text-xs font-mono text-[#f4f4f5]">
-      {/* Tab Switcher */}
-      <div className="flex items-center justify-between border-b border-[#27272a] bg-[#000000] p-1 text-[11px]">
+    <aside className="w-80 bg-[#0a0c10] border-r border-[#222634] flex flex-col h-full select-none text-xs font-mono text-[#f4f4f5]">
+      {/* Sub-navigation Tabs */}
+      <div className="flex items-center justify-between border-b border-[#222634] bg-[#050608] p-1 text-[11px]">
         {[
-          { id: "stage", label: "USD Stage", icon: Layers },
+          { id: "stage", label: "Hierarchy", icon: Layers },
+          { id: "fleet", label: "Fleet Telemetry", icon: Bot },
           { id: "rl", label: "RL Training", icon: Brain },
-          { id: "experiments", label: "Benchmark", icon: FlaskConical },
-          { id: "projects", label: "Projects", icon: FolderOpen },
+          { id: "projects", label: "Environments", icon: FolderOpen },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -137,13 +103,13 @@ export function LeftSidebar({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`px-2 py-1 rounded flex items-center gap-1.5 transition-all ${
+              className={`px-2.5 py-1.5 rounded flex items-center gap-1.5 transition-all font-semibold ${
                 isActive
-                  ? "bg-[#27272a] text-[#ffffff] font-bold border border-[#3f3f46]"
-                  : "text-[#71717a] hover:text-white"
+                  ? "bg-white text-black font-bold shadow-sm"
+                  : "text-[#94a3b8] hover:text-white hover:bg-[#141722]"
               }`}
             >
-              <Icon className="w-3 h-3" />
+              <Icon className="w-3.5 h-3.5" />
               <span>{tab.label}</span>
             </button>
           );
@@ -152,42 +118,42 @@ export function LeftSidebar({
 
       {/* Main Content Area */}
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
-        {/* TAB 1: USD STAGE HIERARCHY */}
+        {/* TAB 1: STAGE HIERARCHY */}
         {activeTab === "stage" && (
           <div className="space-y-3">
-            <div className="flex items-center justify-between text-[10px] text-[#71717a] border-b border-[#27272a] pb-1 uppercase tracking-wider">
-              <span>Stage Prims</span>
-              <span>Type</span>
+            <div className="flex items-center justify-between text-[10px] text-[#64748b] border-b border-[#222634] pb-1 uppercase tracking-wider font-bold">
+              <span>Scene Prims</span>
+              <span>Classification</span>
             </div>
 
             <input
               type="text"
               value={hierarchyFilter}
               onChange={(e) => setHierarchyFilter(e.target.value)}
-              placeholder="Filter Prims (e.g. /World/Robots)..."
-              className="w-full bg-[#000000] border border-[#27272a] rounded px-2.5 py-1 text-xs text-white placeholder:text-[#52525b] focus:outline-none focus:border-white"
+              placeholder="Search Prims (/World/Robots)..."
+              className="w-full bg-[#050608] border border-[#222634] rounded px-3 py-1.5 text-xs text-white placeholder:text-[#475569] focus:outline-none focus:border-white transition-all"
             />
 
             {/* /World Root Scope */}
             <div className="text-[11px] font-bold text-white flex items-center gap-1.5 pt-1">
-              <span className="text-[#71717a]">/</span>
+              <span className="text-[#64748b]">/</span>
               <span>World</span>
-              <span className="text-[#52525b] text-[9px] font-normal ml-auto">Xform</span>
+              <span className="text-[#64748b] text-[9px] font-normal ml-auto">Xform</span>
             </div>
 
             {/* Robots Scope */}
-            <div className="border border-[#18181b] rounded bg-[#000000]">
+            <div className="border border-[#181a22] rounded bg-[#050608]">
               <button
                 onClick={() => setRobotsOpen(!robotsOpen)}
-                className="w-full px-2 py-1 flex items-center justify-between text-white/90 hover:text-white bg-[#121214] text-[11px]"
+                className="w-full px-2.5 py-1.5 flex items-center justify-between text-white hover:bg-[#141722] text-[11px] font-bold"
               >
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[#71717a]">└</span>
-                  <span className="font-semibold">Robots ({robots.length})</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[#64748b]">└</span>
+                  <span>FARS AMR Fleet ({robots.length})</span>
                 </div>
-                <div className="flex items-center gap-2 text-[10px] text-[#71717a]">
+                <div className="flex items-center gap-2 text-[10px] text-[#64748b]">
                   <span>Scope</span>
-                  {robotsOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                  {robotsOpen ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
                 </div>
               </button>
 
@@ -199,19 +165,19 @@ export function LeftSidebar({
                       <div
                         key={r.id}
                         onClick={() => onSelectEntity("robot", r.id)}
-                        className={`px-2 py-1 rounded cursor-pointer flex items-center justify-between transition-all ${
+                        className={`px-2.5 py-1.5 rounded cursor-pointer flex items-center justify-between transition-all ${
                           isSelected
                             ? "bg-white text-black font-bold"
-                            : "text-[#a1a1aa] hover:bg-[#18181b] hover:text-white"
+                            : "text-[#cbd5e1] hover:bg-[#141722] hover:text-white"
                         }`}
                       >
                         <div className="flex items-center gap-2 truncate">
-                          <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? "bg-black" : "bg-white"}`} />
+                          <span className={`w-2 h-2 rounded-full ${isSelected ? "bg-black" : "bg-white"}`} />
                           <span className="truncate">{r.name} [{r.id}]</span>
                         </div>
                         <div className="flex items-center gap-2 text-[10px]">
                           <span>{Math.round(r.battery)}%</span>
-                          <span className="uppercase text-[9px] opacity-70">{r.state}</span>
+                          <span className="uppercase text-[9px] opacity-75">{r.state}</span>
                         </div>
                       </div>
                     );
@@ -220,19 +186,19 @@ export function LeftSidebar({
               )}
             </div>
 
-            {/* Rooms Scope */}
-            <div className="border border-[#18181b] rounded bg-[#000000]">
+            {/* Environment Scope */}
+            <div className="border border-[#181a22] rounded bg-[#050608]">
               <button
                 onClick={() => setRoomsOpen(!roomsOpen)}
-                className="w-full px-2 py-1 flex items-center justify-between text-white/90 hover:text-white bg-[#121214] text-[11px]"
+                className="w-full px-2.5 py-1.5 flex items-center justify-between text-white hover:bg-[#141722] text-[11px] font-bold"
               >
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[#71717a]">└</span>
-                  <span className="font-semibold">Environment ({rooms.length})</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[#64748b]">└</span>
+                  <span>Facility Rooms ({rooms.length})</span>
                 </div>
-                <div className="flex items-center gap-2 text-[10px] text-[#71717a]">
+                <div className="flex items-center gap-2 text-[10px] text-[#64748b]">
                   <span>Scope</span>
-                  {roomsOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                  {roomsOpen ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
                 </div>
               </button>
 
@@ -244,10 +210,10 @@ export function LeftSidebar({
                       <div
                         key={rm.id}
                         onClick={() => onSelectEntity("room", rm.id)}
-                        className={`px-2 py-1 rounded cursor-pointer flex items-center justify-between transition-all ${
+                        className={`px-2.5 py-1.5 rounded cursor-pointer flex items-center justify-between transition-all ${
                           isSelected
                             ? "bg-white text-black font-bold"
-                            : "text-[#a1a1aa] hover:bg-[#18181b] hover:text-white"
+                            : "text-[#cbd5e1] hover:bg-[#141722] hover:text-white"
                         }`}
                       >
                         <span className="truncate">{rm.name}</span>
@@ -260,18 +226,18 @@ export function LeftSidebar({
             </div>
 
             {/* Obstacles Scope */}
-            <div className="border border-[#18181b] rounded bg-[#000000]">
+            <div className="border border-[#181a22] rounded bg-[#050608]">
               <button
                 onClick={() => setObstaclesOpen(!obstaclesOpen)}
-                className="w-full px-2 py-1 flex items-center justify-between text-white/90 hover:text-white bg-[#121214] text-[11px]"
+                className="w-full px-2.5 py-1.5 flex items-center justify-between text-white hover:bg-[#141722] text-[11px] font-bold"
               >
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[#71717a]">└</span>
-                  <span className="font-semibold">Obstacles ({obstacles.length})</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[#64748b]">└</span>
+                  <span>Obstacles ({obstacles.length})</span>
                 </div>
-                <div className="flex items-center gap-2 text-[10px] text-[#71717a]">
+                <div className="flex items-center gap-2 text-[10px] text-[#64748b]">
                   <span>Scope</span>
-                  {obstaclesOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                  {obstaclesOpen ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
                 </div>
               </button>
 
@@ -283,10 +249,10 @@ export function LeftSidebar({
                       <div
                         key={o.id}
                         onClick={() => onSelectEntity("obstacle", o.id)}
-                        className={`px-2 py-1 rounded cursor-pointer flex items-center justify-between transition-all ${
+                        className={`px-2.5 py-1.5 rounded cursor-pointer flex items-center justify-between transition-all ${
                           isSelected
                             ? "bg-white text-black font-bold"
-                            : "text-[#a1a1aa] hover:bg-[#18181b] hover:text-white"
+                            : "text-[#cbd5e1] hover:bg-[#141722] hover:text-white"
                         }`}
                       >
                         <span className="truncate">{o.name}</span>
@@ -295,8 +261,8 @@ export function LeftSidebar({
                             e.stopPropagation();
                             toggleObstacle(o.id, !o.active);
                           }}
-                          className={`text-[9px] px-1.5 py-0.5 rounded border ${
-                            o.active ? "bg-white text-black font-bold border-white" : "text-[#71717a] border-[#27272a]"
+                          className={`text-[9px] px-2 py-0.5 rounded border transition-all ${
+                            o.active ? "bg-white text-black font-bold border-white" : "text-[#64748b] border-[#222634] hover:text-white"
                           }`}
                         >
                           {o.active ? "BLOCKING" : "CLEAR"}
@@ -308,19 +274,19 @@ export function LeftSidebar({
               )}
             </div>
 
-            {/* Humans Scope */}
-            <div className="border border-[#18181b] rounded bg-[#000000]">
+            {/* Digital Twin Agents */}
+            <div className="border border-[#181a22] rounded bg-[#050608]">
               <button
                 onClick={() => setHumansOpen(!humansOpen)}
-                className="w-full px-2 py-1 flex items-center justify-between text-white/90 hover:text-white bg-[#121214] text-[11px]"
+                className="w-full px-2.5 py-1.5 flex items-center justify-between text-white hover:bg-[#141722] text-[11px] font-bold"
               >
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[#71717a]">└</span>
-                  <span className="font-semibold">Agents / Avatars ({humans.length})</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[#64748b]">└</span>
+                  <span>Digital Twins ({humans.length})</span>
                 </div>
-                <div className="flex items-center gap-2 text-[10px] text-[#71717a]">
+                <div className="flex items-center gap-2 text-[10px] text-[#64748b]">
                   <span>Scope</span>
-                  {humansOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                  {humansOpen ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
                 </div>
               </button>
 
@@ -332,10 +298,10 @@ export function LeftSidebar({
                       <div
                         key={h.id}
                         onClick={() => onSelectEntity("human", h.id)}
-                        className={`px-2 py-1 rounded cursor-pointer flex items-center justify-between transition-all ${
+                        className={`px-2.5 py-1.5 rounded cursor-pointer flex items-center justify-between transition-all ${
                           isSelected
                             ? "bg-white text-black font-bold"
-                            : "text-[#a1a1aa] hover:bg-[#18181b] hover:text-white"
+                            : "text-[#cbd5e1] hover:bg-[#141722] hover:text-white"
                         }`}
                       >
                         <span className="truncate">{h.name}</span>
@@ -349,21 +315,66 @@ export function LeftSidebar({
           </div>
         )}
 
-        {/* TAB 2: RL TRAINING STUDIO */}
-        {activeTab === "rl" && (
-          <div className="space-y-4">
-            <div className="text-[11px] text-[#a1a1aa]">
-              Reinforcement learning simulation training in Gymnasium with PyTorch CUDA acceleration.
+        {/* TAB 2: FLEET TELEMETRY */}
+        {activeTab === "fleet" && (
+          <div className="space-y-3">
+            <div className="text-[11px] text-[#94a3b8]">
+              Live status and hardware telemetry for all active FARS-AMR units.
             </div>
 
-            <div className="border border-[#27272a] rounded p-3 bg-[#000000] space-y-3">
-              <div className="font-bold text-white flex items-center gap-1.5">
+            <div className="space-y-2">
+              {robots.map((r) => (
+                <div
+                  key={r.id}
+                  onClick={() => onSelectEntity("robot", r.id)}
+                  className="border border-[#222634] rounded p-3 bg-[#050608] hover:border-white transition-all cursor-pointer space-y-2"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-white text-xs">{r.name} [{r.id}]</span>
+                    <span className="px-2 py-0.5 rounded bg-white text-black font-bold text-[9px] uppercase">
+                      {r.state}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-[11px]">
+                    <div className="bg-[#141722] p-2 rounded border border-[#1e2333]">
+                      <div className="text-[#64748b] text-[10px]">BATTERY</div>
+                      <div className="font-bold text-white">{Math.round(r.battery)}%</div>
+                    </div>
+                    <div className="bg-[#141722] p-2 rounded border border-[#1e2333]">
+                      <div className="text-[#64748b] text-[10px]">VELOCITY</div>
+                      <div className="font-bold text-white font-mono">{r.speed.toFixed(2)} m/s</div>
+                    </div>
+                    <div className="bg-[#141722] p-2 rounded border border-[#1e2333]">
+                      <div className="text-[#64748b] text-[10px]">ODOMETER</div>
+                      <div className="font-bold text-white font-mono">{r.total_distance.toFixed(1)} m</div>
+                    </div>
+                    <div className="bg-[#141722] p-2 rounded border border-[#1e2333]">
+                      <div className="text-[#64748b] text-[10px]">LOCATION</div>
+                      <div className="font-bold text-white truncate">{r.target_node || "Idle"}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: RL TRAINING STUDIO */}
+        {activeTab === "rl" && (
+          <div className="space-y-4">
+            <div className="text-[11px] text-[#94a3b8]">
+              Reinforcement learning navigation policy training in Gymnasium with PyTorch CUDA acceleration.
+            </div>
+
+            <div className="border border-[#222634] rounded p-3 bg-[#050608] space-y-3">
+              <div className="font-bold text-white flex items-center gap-2">
                 <Brain className="w-4 h-4 text-white" />
-                <span>Gymnasium Navigation DQN</span>
+                <span>FARS Navigation DQN</span>
               </div>
 
               <div>
-                <label className="text-[10px] text-[#71717a] block mb-1">Training Episodes: {rlEpisodes}</label>
+                <label className="text-[10px] text-[#64748b] block mb-1">TRAINING EPISODES: {rlEpisodes}</label>
                 <input
                   type="range"
                   min="20"
@@ -378,35 +389,35 @@ export function LeftSidebar({
               <button
                 onClick={handleTrainRL}
                 disabled={rlLoading}
-                className="w-full py-2 rounded bg-white hover:bg-[#e4e4e7] text-black font-bold transition-all disabled:opacity-50"
+                className="w-full py-2 rounded bg-white hover:bg-[#e2e8f0] text-black font-bold transition-all disabled:opacity-50"
               >
-                {rlLoading ? "Training Policy Network (CUDA)..." : "Start Training Session"}
+                {rlLoading ? "Training Neural Policy (CUDA)..." : "Start Training Session"}
               </button>
             </div>
 
             {rlResult && (
-              <div className="border border-[#27272a] rounded p-3 bg-[#000000] space-y-2">
-                <div className="text-white font-bold flex items-center gap-1">
+              <div className="border border-[#222634] rounded p-3 bg-[#050608] space-y-2">
+                <div className="text-white font-bold flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4" />
                   <span>Session Results</span>
                 </div>
                 <div className="space-y-1.5 text-[11px]">
                   <div className="flex justify-between">
-                    <span className="text-[#a1a1aa]">Success Rate:</span>
+                    <span className="text-[#94a3b8]">Success Rate:</span>
                     <span className="font-bold text-white">{rlResult.success_rate_percent}%</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[#a1a1aa]">Final Avg Reward:</span>
+                    <span className="text-[#94a3b8]">Mean Reward:</span>
                     <span className="font-bold text-white">{rlResult.final_avg_reward}</span>
                   </div>
-                  <div className="border-t border-[#27272a] pt-1.5">
-                    <div className="text-[#71717a] text-[10px] uppercase">A* Benchmark Comparison:</div>
+                  <div className="border-t border-[#222634] pt-1.5">
+                    <div className="text-[#64748b] text-[10px] uppercase">A* Benchmark Comparison:</div>
                     <div className="flex justify-between pt-0.5">
-                      <span className="text-[#a1a1aa]">Policy Avg Steps:</span>
+                      <span className="text-[#94a3b8]">Learned Policy Steps:</span>
                       <span className="text-white font-bold">{rlResult.baseline_comparison.policy_avg_steps}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-[#a1a1aa]">A* Optimal Steps:</span>
+                      <span className="text-[#94a3b8]">A* Optimal Shortest:</span>
                       <span className="text-white font-bold">{rlResult.baseline_comparison.astar_baseline_steps}</span>
                     </div>
                   </div>
@@ -416,115 +427,26 @@ export function LeftSidebar({
           </div>
         )}
 
-        {/* TAB 3: BENCHMARK LAB */}
-        {activeTab === "experiments" && (
-          <div className="space-y-4">
-            <div className="text-[11px] text-[#a1a1aa]">
-              Monte Carlo Fleet Throughput & Stress Testing Benchmark.
-            </div>
-
-            <div className="border border-[#27272a] rounded p-3 bg-[#000000] space-y-3">
-              <div>
-                <label className="text-[10px] text-[#71717a] block mb-1">Fleet Configuration:</label>
-                <div className="flex gap-2">
-                  {[1, 3, 5].map((cnt) => (
-                    <button
-                      key={cnt}
-                      onClick={() => setExpRobotCount(cnt)}
-                      className={`flex-1 py-1 rounded text-xs border ${
-                        expRobotCount === cnt
-                          ? "bg-white text-black border-white font-bold"
-                          : "bg-[#18181b] text-[#71717a] border-[#27272a]"
-                      }`}
-                    >
-                      {cnt} AMR
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="text-[10px] text-[#71717a] block mb-1">Task Workload: {expNumTasks} Tasks</label>
-                <select
-                  value={expNumTasks}
-                  onChange={(e) => setExpNumTasks(parseInt(e.target.value))}
-                  className="w-full bg-[#000000] border border-[#27272a] rounded p-1.5 text-xs text-white"
-                >
-                  <option value={10}>10 Clinical Tasks (Quick)</option>
-                  <option value={15}>15 Clinical Tasks (Standard)</option>
-                  <option value={25}>25 Clinical Tasks (Stress Test)</option>
-                </select>
-              </div>
-
-              <button
-                onClick={handleRunExperiment}
-                disabled={expLoading}
-                className="w-full py-2 rounded bg-white hover:bg-[#e4e4e7] text-black font-bold transition-all disabled:opacity-50"
-              >
-                {expLoading ? "Executing Simulation Run..." : "Run Benchmark Run"}
-              </button>
-            </div>
-
-            {expResult && (
-              <div className="border border-[#27272a] rounded p-3 bg-[#000000] space-y-2">
-                <div className="flex items-center justify-between text-white font-bold">
-                  <span className="flex items-center gap-1">
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>Run Complete</span>
-                  </span>
-                  <button
-                    onClick={handleDownloadExperimentCSV}
-                    title="Export CSV"
-                    className="flex items-center gap-1 text-[10px] bg-[#27272a] px-2 py-0.5 rounded text-white hover:bg-[#3f3f46]"
-                  >
-                    <Download className="w-3 h-3" />
-                    <span>CSV</span>
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 text-[11px] pt-1">
-                  <div className="bg-[#121214] p-2 rounded border border-[#18181b]">
-                    <div className="text-[#71717a]">Completion Rate</div>
-                    <div className="text-white font-bold text-sm">{expResult.completion_rate_percent}%</div>
-                  </div>
-                  <div className="bg-[#121214] p-2 rounded border border-[#18181b]">
-                    <div className="text-[#71717a]">Avg Response</div>
-                    <div className="text-white font-bold text-sm">{expResult.avg_response_time_seconds}s</div>
-                  </div>
-                  <div className="bg-[#121214] p-2 rounded border border-[#18181b]">
-                    <div className="text-[#71717a]">Total Distance</div>
-                    <div className="text-white font-bold text-sm">{expResult.total_distance_meters}m</div>
-                  </div>
-                  <div className="bg-[#121214] p-2 rounded border border-[#18181b]">
-                    <div className="text-[#71717a]">Battery Consumed</div>
-                    <div className="text-white font-bold text-sm">{expResult.battery_consumed_percent}%</div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* TAB 4: PROJECTS */}
+        {/* TAB 4: ENVIRONMENTS */}
         {activeTab === "projects" && (
           <div className="space-y-3">
-            <div className="text-[11px] text-[#a1a1aa]">
-              USD Environment Templates and Stage Checkpoints.
+            <div className="text-[11px] text-[#94a3b8]">
+              Switch environment models and simulation scenarios.
             </div>
 
             <div className="space-y-2">
               {[
-                { id: "hospital", name: "Hospital Digital Twin", desc: "Corridors, ICUs, Patient Rooms, Pharmacy" },
-                { id: "warehouse", name: "Logistics Warehouse", desc: "Pallet racking, sorting bays, loading docks" },
-                { id: "office", name: "Corporate Campus", desc: "Cubicles, conference rooms, reception hall" },
+                { id: "hospital", name: "Hospital Complex", desc: "Corridors, ICUs, Patient Rooms, Pharmacy" },
+                { id: "warehouse", name: "Logistics Fulfillment", desc: "High-bay racks, sorting conveyor zones" },
+                { id: "office", name: "Corporate Campus", desc: "Workspaces, conference halls, central atrium" },
               ].map((env) => (
                 <div
                   key={env.id}
-                  className="border border-[#27272a] rounded p-2.5 bg-[#000000] hover:border-white transition-all cursor-pointer"
+                  className="border border-[#222634] rounded p-3 bg-[#050608] hover:border-white transition-all cursor-pointer"
                   onClick={() => sendControl("load_environment", { template: env.id })}
                 >
-                  <div className="font-bold text-white text-[11px]">{env.name}</div>
-                  <div className="text-[10px] text-[#71717a] mt-0.5">{env.desc}</div>
+                  <div className="font-bold text-white text-xs">{env.name}</div>
+                  <div className="text-[10px] text-[#64748b] mt-1">{env.desc}</div>
                 </div>
               ))}
             </div>

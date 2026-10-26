@@ -1,5 +1,5 @@
 """
-FARSverse - NVIDIA Omniverse™ Isaac Sim Desktop Studio (PyQt6 Edition)
+FARSverse - Robotics Simulation Desktop Studio (PyQt6 Edition)
 A Native Desktop Robotics Digital Twin, 3D Simulation & Deep RL Training Platform.
 Features:
  - 60 FPS Hardware-Accelerated 3D/Isometric Viewport with Raycasted LiDAR & Sonar
@@ -261,7 +261,7 @@ class RLTrainingWorker(QThread):
 # ----------------------------------------------------------------------
 # 4. Realistic 3D / Isometric Omniverse Viewport Widget
 # ----------------------------------------------------------------------
-class OmniverseRealisticViewport(QWidget):
+class FARSRealisticViewport(QWidget):
     entity_selected = pyqtSignal(str, str)  # (type, id)
 
     def __init__(self, parent=None):
@@ -949,9 +949,9 @@ class OmniverseRealisticViewport(QWidget):
         painter.drawEllipse(25, 24, 8, 8)
 
         painter.setPen(QPen(QColor(0x76, 0xb9, 0x00)))
-        painter.drawText(40, 32, "NVIDIA OMNIVERSE™")
+        painter.drawText(40, 32, "FARS DIGITAL TWIN")
         painter.setPen(QPen(QColor(0xff, 0xff, 0xff, 220)))
-        painter.drawText(185, 32, f"| ISAAC SIM | {self.current_fps} FPS | 3D PBR")
+        painter.drawText(185, 32, f"| FARS SIM | {self.current_fps} FPS | 3D PBR")
 
         # 2. Top-Right 3D Axis Compass Gizmo
         axis_cx = w - 50
@@ -1279,10 +1279,10 @@ class RLTrainingStudioWidget(QWidget):
 # ----------------------------------------------------------------------
 # 6. Main Omniverse PyQt6 Desktop Studio Window
 # ----------------------------------------------------------------------
-class OmniverseMainWindow(QMainWindow):
+class FARSMainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("FARSverse - NVIDIA Omniverse™ Isaac Sim (PyQt6 Native Studio)")
+        self.setWindowTitle("FARSverse - Robotics Simulation Studio (PyQt6 Native)")
         self.resize(1600, 960)
         self.setStyleSheet("""
             QMainWindow {
@@ -1310,8 +1310,8 @@ class OmniverseMainWindow(QMainWindow):
             }
             QPushButton:hover {
                 background-color: #27334a;
-                color: #76b900;
-                border-color: #76b900;
+                color: #ffffff;
+                border-color: #ffffff;
             }
             QLineEdit {
                 background-color: #141822;
@@ -1322,7 +1322,7 @@ class OmniverseMainWindow(QMainWindow):
                 font-size: 11px;
             }
             QLineEdit:focus {
-                border: 1px solid #76b900;
+                border: 1px solid #ffffff;
             }
             QTreeWidget {
                 background-color: #11141a;
@@ -1331,7 +1331,7 @@ class OmniverseMainWindow(QMainWindow):
                 font-size: 11px;
             }
             QTreeWidget::item:selected {
-                background-color: #76b900;
+                background-color: #ffffff;
                 color: #000000;
                 font-weight: bold;
             }
@@ -1350,9 +1350,9 @@ class OmniverseMainWindow(QMainWindow):
             }
             QTabBar::tab:selected {
                 background-color: #11141a;
-                color: #76b900;
+                color: #ffffff;
                 font-weight: bold;
-                border-bottom: 2px solid #76b900;
+                border-bottom: 2px solid #ffffff;
             }
             QStatusBar {
                 background-color: #11141a;
@@ -1365,7 +1365,7 @@ class OmniverseMainWindow(QMainWindow):
             }
         """)
 
-        # Central Workspace Tabs (Studio Viewport vs RL Training Studio)
+        # Central Workspace Tabs
         self.central_tabs = QTabWidget(self)
         self.setCentralWidget(self.central_tabs)
 
@@ -1376,7 +1376,7 @@ class OmniverseMainWindow(QMainWindow):
         sim_layout.setSpacing(0)
 
         # Initialize Viewport
-        self.viewport = OmniverseRealisticViewport(self)
+        self.viewport = FARSRealisticViewport(self)
         self.viewport.entity_selected.connect(self.on_entity_selected)
 
         # Top Toolbar
@@ -1434,11 +1434,11 @@ class OmniverseMainWindow(QMainWindow):
         self.addToolBar(toolbar)
 
         # Brand Badge
-        brand_label = QLabel("  Ω NVIDIA OMNIVERSE™ ")
-        brand_label.setStyleSheet("color: #76b900; font-weight: bold; font-size: 12px;")
+        brand_label = QLabel("  [ FARS ] ")
+        brand_label.setStyleSheet("color: #ffffff; font-weight: bold; font-size: 12px;")
         toolbar.addWidget(brand_label)
 
-        isaac_tag = QLabel("ISAAC SIM  ")
+        isaac_tag = QLabel("SIMULATION CORE  ")
         isaac_tag.setStyleSheet("color: #94a3b8; font-size: 10px; font-weight: bold;")
         toolbar.addWidget(isaac_tag)
 
@@ -1643,7 +1643,7 @@ class OmniverseMainWindow(QMainWindow):
 
     def on_connection_changed(self, connected: bool):
         if connected:
-            self.status_bar.showMessage("NVIDIA Isaac Sim Live State: Connected to 127.0.0.1:8080 | Ollama RTX GPU Ready")
+            self.status_bar.showMessage("FARS Live State: Connected to 127.0.0.1:8080 | Ollama RTX GPU Ready")
         else:
             self.status_bar.showMessage("Engine Disconnected. Reconnecting to 127.0.0.1:8080...")
 
@@ -1804,7 +1804,7 @@ class OmniverseMainWindow(QMainWindow):
 # ----------------------------------------------------------------------
 def main():
     app = QApplication.instance() or QApplication(sys.argv)
-    window = OmniverseMainWindow()
+    window = FARSMainWindow()
     window.show()
     sys.exit(app.exec())
 

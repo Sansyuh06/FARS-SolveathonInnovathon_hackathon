@@ -132,7 +132,7 @@ export function Viewport3D({
   };
 
   // ------------------------------------------------------------------
-  // 1. Initialize NVIDIA Omniverse Three.js Studio Scene
+  // 1. Initialize FARS Three.js Studio Scene
   // ------------------------------------------------------------------
   useEffect(() => {
     if (!containerRef.current) return;
@@ -184,7 +184,7 @@ export function Viewport3D({
     };
     controlsRef.current = controls;
 
-    // Omniverse Studio Lighting Setup: Clean, sharp neutral PBR lighting
+    // FARS Studio Lighting Setup: Clean, sharp neutral PBR lighting
     const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
     scene.add(ambientLight);
 
@@ -198,7 +198,7 @@ export function Viewport3D({
     fillLight.position.set(-45, 50, -35);
     scene.add(fillLight);
 
-    // Subtle Omniverse Ground Bounce Light
+    // Subtle Ground Bounce Light
     const groundBounce = new THREE.HemisphereLight(0x27272a, 0x09090b, 0.5);
     scene.add(groundBounce);
 
@@ -423,7 +423,7 @@ export function Viewport3D({
   }, [showGrid]);
 
   // ------------------------------------------------------------------
-  // 4. Build Unified Omniverse Architectural Floorplan (Once)
+  // 4. Build FARS Facility Architectural Floorplan (Once)
   // ------------------------------------------------------------------
   const builtWorldRef = useRef<string>("");
   useEffect(() => {
@@ -587,8 +587,8 @@ export function Viewport3D({
         roomGroup.add(monitor);
       }
 
-      // Omniverse Architectural Room Label Signage
-      const label = createOmniverseRoomSign(room.name || room.id);
+      // FARS Architectural Room Label Signage
+      const label = createFARSRoomSign(room.name || room.id);
       label.position.set(room.x, 2.4, room.z);
       label.scale.set(4.0, 1.6, 1);
       roomGroup.add(label);
@@ -637,7 +637,7 @@ export function Viewport3D({
   }, [snapshot?.world?.obstacles]);
 
   // ------------------------------------------------------------------
-  // 6. NVIDIA Isaac AMR / Nova Carter Robot Pool (Persistent 60 FPS)
+  // 6. FARS-AMR Mobile Robot Fleet Pool (Persistent 60 FPS)
   // ------------------------------------------------------------------
   useEffect(() => {
     if (!snapshot?.robots) return;
@@ -760,7 +760,7 @@ export function Viewport3D({
         estop.position.set(0.35, 0.52, -0.35);
         rGroup.add(estop);
 
-        // 10. Omniverse Selection Bounding Cage / Target Bracket
+        // 10. Selection Bounding Bracket
         const selBracket = new THREE.Group();
         const selRing = new THREE.Mesh(
           new THREE.RingGeometry(1.05, 1.2, 32),
@@ -772,7 +772,7 @@ export function Viewport3D({
         selBracket.visible = false;
         rGroup.add(selBracket);
 
-        // 11. Omniverse Holographic Floating HUD Label
+        // 11. FARS Holographic Floating HUD Label
         const labelCanvas = document.createElement("canvas");
         labelCanvas.width = 256;
         labelCanvas.height = 96;
@@ -851,7 +851,7 @@ export function Viewport3D({
       entry.labelSprite.visible = showLabels;
       const bat = Math.round(robot.battery);
       if (showLabels && (entry.lastBattery !== bat || entry.lastBattery === -1)) {
-        renderOmniverseLabelCanvas(entry.labelCanvas, entry.labelCtx, robot.id, bat, robot.state);
+        renderFARSLabelCanvas(entry.labelCanvas, entry.labelCtx, robot.id, bat, robot.state);
         entry.labelTex.needsUpdate = true;
         entry.lastBattery = bat;
       }
@@ -882,7 +882,7 @@ export function Viewport3D({
   }, [snapshot?.robots, selectedEntity, showPaths, showLabels]);
 
   // ------------------------------------------------------------------
-  // 7. Omniverse Digital Twin Holographic Human Avatars
+  // 7. FARS Digital Twin Human Avatars
   // ------------------------------------------------------------------
   useEffect(() => {
     if (!snapshot?.humans) return;
@@ -970,12 +970,12 @@ export function Viewport3D({
 
       // Selection Highlight
       if (isSelected) {
-        entry.bodyMat.color.setHex(0x76b900); // NVIDIA Green for selection
+        entry.bodyMat.color.setHex(0xffffff); // Crisp White for selection
       } else {
-        let baseColor = 0x38bdf8;
-        if (human.agent_type === "nurse") baseColor = 0x0d9488;
-        else if (human.agent_type === "doctor") baseColor = 0xf8fafc;
-        else if (human.agent_type === "visitor") baseColor = 0xa855f7;
+        let baseColor = 0xd4d4d8;
+        if (human.agent_type === "nurse") baseColor = 0xa1a1aa;
+        else if (human.agent_type === "doctor") baseColor = 0xf4f4f5;
+        else if (human.agent_type === "visitor") baseColor = 0x71717a;
         entry.bodyMat.color.setHex(baseColor);
       }
 
@@ -987,46 +987,46 @@ export function Viewport3D({
   }, [snapshot?.humans, selectedEntity]);
 
   return (
-    <div className="relative w-full h-full bg-[#0e1117] overflow-hidden select-none font-mono" ref={containerRef}>
+    <div className="relative w-full h-full bg-[#050608] overflow-hidden select-none font-mono" ref={containerRef}>
       {/* ------------------------------------------------------------- */}
-      {/* Top Left: Omniverse Camera & Stage HUD                        */}
+      {/* Top Left: FARS Simulation Core HUD                            */}
       {/* ------------------------------------------------------------- */}
       <div className="absolute top-3 left-3 z-10 pointer-events-none flex flex-col gap-1.5">
-        <div className="bg-[#141720]/85 backdrop-blur-md border border-white/10 px-3.5 py-1.5 rounded text-xs text-white flex items-center gap-2.5 shadow-xl">
-          <div className="w-2.5 h-2.5 rounded-full bg-[#76b900] shadow-[0_0_8px_#76b900]" />
-          <span className="font-bold tracking-wider text-[#76b900]">NVIDIA ISAAC SIM</span>
-          <span className="text-white/20">|</span>
-          <span className="text-white/80 uppercase">CAMERA: {cameraMode}</span>
-          <span className="text-white/20">|</span>
-          <span className="text-white/60">{snapshot?.world?.name || "Initializing..."}</span>
+        <div className="bg-[#0a0c10]/90 backdrop-blur-md border border-[#222634] px-3.5 py-1.5 rounded text-xs text-white flex items-center gap-2.5 shadow-xl">
+          <div className="w-2 h-2 rounded-full bg-white shadow-[0_0_8px_#ffffff]" />
+          <span className="font-bold tracking-wider text-white uppercase">FARS SIMULATION CORE</span>
+          <span className="text-[#33394a]">|</span>
+          <span className="text-[#cbd5e1] uppercase">VIEW: {cameraMode}</span>
+          <span className="text-[#33394a]">|</span>
+          <span className="text-[#94a3b8]">{snapshot?.world?.name || "Initializing..."}</span>
         </div>
       </div>
 
       {/* ------------------------------------------------------------- */}
-      {/* Top Right: Omniverse RTX Real-Time & 3D Orientation Gizmo     */}
+      {/* Top Right: FARS Real-Time Telemetry & 3D Orientation Gizmo     */}
       {/* ------------------------------------------------------------- */}
       <div className="absolute top-3 right-3 z-10 pointer-events-none flex flex-col items-end gap-1.5">
-        <div className="bg-[#141720]/85 backdrop-blur-md border border-white/10 px-3 py-1.5 rounded text-[11px] text-white/70 flex items-center gap-2 shadow-xl">
-          <span className="text-[#76b900] font-bold">RTX: REAL-TIME</span>
-          <span className="text-white/20">|</span>
-          <span>{fps} FPS</span>
-          <span className="text-white/20">|</span>
-          <span className="text-white/50">USD: /World</span>
+        <div className="bg-[#0a0c10]/90 backdrop-blur-md border border-[#222634] px-3 py-1.5 rounded text-[11px] text-[#cbd5e1] flex items-center gap-2 shadow-xl">
+          <span className="text-white font-bold">FARS 3D ENGINE</span>
+          <span className="text-[#33394a]">|</span>
+          <span className="font-mono text-white">{fps} FPS</span>
+          <span className="text-[#33394a]">|</span>
+          <span className="text-[#94a3b8]">60Hz HARDWARE</span>
         </div>
 
         {/* 3D Coordinate Axis Compass */}
-        <div className="bg-[#141720]/80 backdrop-blur-sm border border-white/10 p-2 rounded flex items-center gap-2 text-[10px] text-white/60">
-          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-500" />X</span>
-          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#76b900]" />Y</span>
-          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-cyan-500" />Z</span>
+        <div className="bg-[#0a0c10]/90 backdrop-blur-sm border border-[#222634] p-2 rounded flex items-center gap-2.5 text-[10px] text-[#94a3b8]">
+          <span className="flex items-center gap-1 font-bold"><span className="w-2 h-2 rounded-full bg-rose-500" />X</span>
+          <span className="flex items-center gap-1 font-bold"><span className="w-2 h-2 rounded-full bg-white" />Y</span>
+          <span className="flex items-center gap-1 font-bold"><span className="w-2 h-2 rounded-full bg-cyan-400" />Z</span>
         </div>
       </div>
 
       {/* ------------------------------------------------------------- */}
-      {/* Bottom Center: Omniverse Navigation Hotkey Helper             */}
+      {/* Bottom Center: Navigation Hint Bar                            */}
       {/* ------------------------------------------------------------- */}
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 pointer-events-none text-[11px] text-white/40 bg-[#141720]/80 backdrop-blur-sm px-3.5 py-1 rounded-full border border-white/10 shadow-lg">
-        Left-Drag: {navMode === "pan" ? "Pan" : "Orbit"} | Right-Drag: Pan | Scroll: Zoom | Click: USD Entity Inspect
+      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 pointer-events-none text-[11px] text-[#94a3b8] bg-[#0a0c10]/90 backdrop-blur-sm px-4 py-1.5 rounded-full border border-[#222634] shadow-lg">
+        Left-Drag: {navMode === "pan" ? "Pan" : "Orbit"} | Right-Drag: Pan | Scroll: Zoom | Click: Inspect Entity
       </div>
 
       {/* ------------------------------------------------------------- */}
@@ -1125,9 +1125,9 @@ export function Viewport3D({
 }
 
 // ------------------------------------------------------------------
-// Canvas Graphics Renderers for Omniverse Signage & Billboards
+// Canvas Graphics Renderers for FARS Signage & Badges
 // ------------------------------------------------------------------
-function renderOmniverseLabelCanvas(
+function renderFARSLabelCanvas(
   canvas: HTMLCanvasElement,
   ctx: CanvasRenderingContext2D,
   robotId: string,
@@ -1136,12 +1136,12 @@ function renderOmniverseLabelCanvas(
 ) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Omniverse Dark Titanium Badge
-  ctx.fillStyle = "rgba(18, 22, 31, 0.92)";
+  // FARS Robot Label Badge
+  ctx.fillStyle = "rgba(10, 12, 16, 0.94)";
   ctx.beginPath();
   ctx.roundRect(10, 6, 236, 84, 6);
   ctx.fill();
-  ctx.strokeStyle = "rgba(118, 185, 0, 0.4)";
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
@@ -1152,7 +1152,7 @@ function renderOmniverseLabelCanvas(
   ctx.fillText(robotId, 22, 36);
 
   // Battery percentage
-  ctx.fillStyle = battery > 20 ? "#76b900" : "#ef4444";
+  ctx.fillStyle = "#ffffff";
   ctx.font = "bold 19px monospace";
   ctx.textAlign = "right";
   ctx.fillText(`${battery}%`, 232, 36);
@@ -1162,31 +1162,31 @@ function renderOmniverseLabelCanvas(
   ctx.fillRect(22, 48, 210, 12);
 
   // Battery bar fill
-  ctx.fillStyle = battery > 20 ? "#76b900" : "#ef4444";
+  ctx.fillStyle = battery > 20 ? "#ffffff" : "#ef4444";
   ctx.fillRect(22, 48, Math.max(4, (battery / 100) * 210), 12);
 
   // State text
-  ctx.fillStyle = "rgba(255, 255, 255, 0.55)";
+  ctx.fillStyle = "rgba(255, 255, 255, 0.65)";
   ctx.font = "14px monospace";
   ctx.textAlign = "left";
   ctx.fillText(state, 22, 78);
 }
 
-function createOmniverseRoomSign(name: string): THREE.Sprite {
+function createFARSRoomSign(name: string): THREE.Sprite {
   const canvas = document.createElement("canvas");
   canvas.width = 256;
   canvas.height = 100;
   const ctx = canvas.getContext("2d")!;
 
-  ctx.fillStyle = "rgba(15, 20, 28, 0.88)";
+  ctx.fillStyle = "rgba(10, 12, 16, 0.9)";
   ctx.beginPath();
   ctx.roundRect(12, 10, 232, 80, 6);
   ctx.fill();
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.18)";
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  ctx.fillStyle = "#e2e8f0";
+  ctx.fillStyle = "#ffffff";
   ctx.font = "bold 20px monospace";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
