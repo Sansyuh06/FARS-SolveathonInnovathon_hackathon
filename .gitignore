@@ -35,6 +35,8 @@ Thumbs.db
 # Build artifacts
 build/
 unity_build/
+vita_port/vita3k/
+vita_port/*.vpk
 *.spec
 *.log
 
