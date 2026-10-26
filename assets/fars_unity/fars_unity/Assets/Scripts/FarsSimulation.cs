@@ -15,17 +15,84 @@ using UnityEngine.InputSystem;
 public class FarsSimulation : MonoBehaviour
 {
 
-    private static Shader _cachedDefaultShader = null;
-    public static Shader SafeGetShader(string preferredName = "Universal Render Pipeline/Lit")
+    private static Material _baseLitMat = null;
+    private static Material _baseUnlitMat = null;
+
+    public static Material CreateMaterial(Color c, bool isTransparent = false, bool emission = false)
     {
-        if (_cachedDefaultShader != null) return _cachedDefaultShader;
-        var temp = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        if (temp != null && temp.GetComponent<Renderer>() != null && temp.GetComponent<Renderer>().sharedMaterial != null)
+        if (_baseLitMat == null)
         {
-            _cachedDefaultShader = temp.GetComponent<Renderer>().sharedMaterial.shader;
+            _baseLitMat = Resources.Load<Material>("FARS_BaseMaterial");
         }
-        GameObject.Destroy(temp);
-        return _cachedDefaultShader;
+
+        Material m = null;
+        if (_baseLitMat != null)
+        {
+            m = new Material(_baseLitMat);
+        }
+        else
+        {
+            Shader s = Shader.Find("Universal Render Pipeline/Lit")
+                    ?? Shader.Find("Universal Render Pipeline/Unlit")
+                    ?? Shader.Find("Sprites/Default");
+            if (s != null)
+            {
+                m = new Material(s);
+            }
+            else
+            {
+                var temp = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                m = new Material(temp.GetComponent<Renderer>().sharedMaterial);
+                GameObject.Destroy(temp);
+            }
+        }
+
+        m.color = c;
+        if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", c);
+        if (m.HasProperty("_Color")) m.SetColor("_Color", c);
+
+        if (emission)
+        {
+            m.EnableKeyword("_EMISSION");
+            if (m.HasProperty("_EmissionColor")) m.SetColor("_EmissionColor", c * 1.5f);
+        }
+
+        if (isTransparent || c.a < 0.95f)
+        {
+            if (m.HasProperty("_Surface")) m.SetFloat("_Surface", 1);
+            if (m.HasProperty("_Blend")) m.SetFloat("_Blend", 0);
+            m.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            m.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            m.SetInt("_ZWrite", 0);
+            m.renderQueue = 3000;
+        }
+
+        return m;
+    }
+
+    public static Material GetUnlitMaterial(Color c)
+    {
+        if (_baseUnlitMat == null)
+        {
+            _baseUnlitMat = Resources.Load<Material>("FARS_UnlitMaterial");
+        }
+
+        Material m = null;
+        if (_baseUnlitMat != null)
+        {
+            m = new Material(_baseUnlitMat);
+        }
+        else
+        {
+            Shader s = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Sprites/Default");
+            if (s != null) m = new Material(s);
+            else m = CreateMaterial(c);
+        }
+
+        m.color = c;
+        if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", c);
+        if (m.HasProperty("_Color")) m.SetColor("_Color", c);
+        return m;
     }
 
     private List<RobotAgent> robots = new();
@@ -45,6 +112,16 @@ public class FarsSimulation : MonoBehaviour
         cam = gameObject.AddComponent<CameraController>();
         Camera.main.backgroundColor = new Color32(12, 14, 20, 255);
         Camera.main.clearFlags = CameraClearFlags.SolidColor;
+
+        var dirLightGO = new GameObject("MainDirectionalLight");
+        var dirLight = dirLightGO.AddComponent<Light>();
+        dirLight.type = LightType.Directional;
+        dirLight.color = new Color(0.95f, 0.95f, 1.0f);
+        dirLight.intensity = 1.3f;
+        dirLightGO.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
+
+        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
+        RenderSettings.ambientLight = new Color(0.25f, 0.28f, 0.35f);
         
         var worldGO = new GameObject("HospitalWorld");
         worldGO.AddComponent<HospitalWorldGenerator>();
@@ -542,18 +619,7 @@ public class HospitalWorldGenerator : MonoBehaviour
 
     Material CreateMaterial(Color c)
     {
-        var m = new Material(FarsSimulation.SafeGetShader("Universal Render Pipeline/Lit"));
-        m.color = c;
-        if (c.a < 1f)
-        {
-            m.SetFloat("_Mode", 3);
-            m.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            m.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-            m.SetInt("_ZWrite", 0);
-            m.EnableKeyword("_ALPHABLEND_ON");
-            m.renderQueue = 3000;
-        }
-        return m;
+        return FarsSimulation.CreateMaterial(c, c.a < 0.99f);
     }
 
     void CreateBillboardText(string node, Vector3 pos, Color led)
@@ -584,7 +650,7 @@ public class HospitalWorldGenerator : MonoBehaviour
         var ring = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         ring.transform.position = pos + Vector3.up * 0.15f;
         ring.transform.localScale = new Vector3(8, 0.05f, 8);
-        var m = new Material(FarsSimulation.SafeGetShader("Universal Render Pipeline/Lit"));
+        var m = FarsSimulation.CreateMaterial(new Color32(0, 200, 255, 128), true);
         m.color = new Color32(0, 200, 255, 128);
         m.SetFloat("_Mode", 3);
         m.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
@@ -785,7 +851,7 @@ public class RobotAgent : MonoBehaviour
         groundGlow.transform.SetParent(transform, false);
         groundGlow.transform.localPosition = new Vector3(0, -0.55f, 0);
         groundGlow.transform.localScale = new Vector3(2.5f, 0.01f, 2.5f);
-        glowMat = new Material(FarsSimulation.SafeGetShader("Universal Render Pipeline/Lit"));
+        glowMat = FarsSimulation.CreateMaterial(new Color32(0, 200, 255, 128), true);
         glowMat.color = new Color(themeColor.r/255f, themeColor.g/255f, themeColor.b/255f, 0.2f);
         glowMat.SetFloat("_Mode", 3);
         glowMat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
@@ -811,7 +877,7 @@ public class RobotAgent : MonoBehaviour
         lineGO.transform.SetParent(transform, false);
         line = lineGO.AddComponent<LineRenderer>();
         line.startWidth = 0.3f; line.endWidth = 0.1f;
-        line.material = new Material(FarsSimulation.SafeGetShader("Sprites/Default"));
+        line.material = FarsSimulation.GetUnlitMaterial(themeColor);
         line.startColor = new Color(themeColor.r / 255f, themeColor.g / 255f, themeColor.b / 255f, 0.6f);
         line.endColor = new Color(themeColor.r / 255f, themeColor.g / 255f, themeColor.b / 255f, 0.0f);
         line.positionCount = 0;
@@ -938,7 +1004,7 @@ public class RobotAgent : MonoBehaviour
             var p = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             p.transform.position = transform.position;
             p.transform.localScale = Vector3.one * 0.3f;
-            var m = p.GetComponent<Renderer>().material = new Material(FarsSimulation.SafeGetShader("Universal Render Pipeline/Lit"));
+            var m = p.GetComponent<Renderer>().material = FarsSimulation.CreateMaterial(new Color32(0, 200, 255, 128), true);
             m.color = themeColor;
             m.EnableKeyword("_EMISSION");
             m.SetColor("_EmissionColor", (Color)themeColor * 2f);
@@ -1054,7 +1120,7 @@ public class HumanAgent : MonoBehaviour
         var torso = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         torso.transform.SetParent(modelPivot, false);
         torso.transform.localScale = new Vector3(0.5f, 0.6f, 0.5f);
-        var tm = torso.GetComponent<Renderer>().material = new Material(FarsSimulation.SafeGetShader("Universal Render Pipeline/Lit"));
+        var tm = torso.GetComponent<Renderer>().material = FarsSimulation.CreateMaterial(new Color32(0, 200, 255, 128), true);
         tm.color = roleColor;
         Destroy(torso.GetComponent<Collider>());
 
@@ -1069,7 +1135,7 @@ public class HumanAgent : MonoBehaviour
         shadow.transform.SetParent(transform, false);
         shadow.transform.localPosition = new Vector3(0, -0.48f, 0);
         shadow.transform.localScale = new Vector3(0.8f, 0.01f, 0.8f);
-        var sm = shadow.GetComponent<Renderer>().material = new Material(FarsSimulation.SafeGetShader("Universal Render Pipeline/Lit"));
+        var sm = shadow.GetComponent<Renderer>().material = FarsSimulation.CreateMaterial(new Color32(0, 200, 255, 128), true);
         sm.color = new Color(0,0,0, 0.3f);
         sm.SetFloat("_Mode", 3);
         sm.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
