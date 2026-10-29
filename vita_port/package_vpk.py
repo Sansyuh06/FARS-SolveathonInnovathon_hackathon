@@ -1,11 +1,15 @@
 import os
+import io
 import zipfile
 import shutil
+from PIL import Image
 from build_sfo import build_sfo
 
 base_dir = r"d:\fyeshi\project\rohit\vita_port"
 src_vpk = os.path.join(base_dir, "vitajs-0.5.1.vpk")
 out_vpk = r"d:\fyeshi\project\rohit\FARSverse_Pocket.vpk"
+desktop_dir = os.path.expanduser(r"~\Desktop")
+desktop_vpk = os.path.join(desktop_dir, "FARSverse_Pocket.vpk")
 
 print("1. Generating custom param.sfo for FARSverse Pocket...")
 sfo_data = {
@@ -34,7 +38,24 @@ sfo_file = os.path.join(base_dir, "param.sfo")
 with open(sfo_file, "wb") as f:
     f.write(sfo_bytes)
 
-print("2. Packaging FARSverse_Pocket.vpk...")
+def get_compliant_vita_png(file_path, target_size, allow_transparency=True):
+    """
+    PS Vita / PS TV promoter utility requires LiveArea PNG images to strictly be
+    8-bit indexed palette (mode 'P', max 256 colors) with standard PLTE chunks.
+    Otherwise VitaShell fails with error 0x8010113D (SCE_PROMOTER_UTIL_ERROR_INVALID_PARAM).
+    """
+    im = Image.open(file_path)
+    if im.size != target_size:
+        im = im.resize(target_size, Image.Resampling.LANCZOS)
+    if allow_transparency and im.mode == 'RGBA':
+        im_p = im.quantize(colors=256)
+    else:
+        im_p = im.convert('RGB').quantize(colors=256)
+    buf = io.BytesIO()
+    im_p.save(buf, format='PNG', optimize=True)
+    return buf.getvalue()
+
+print("2. Packaging FARSverse_Pocket.vpk with PS Vita/PSTV-compliant assets...")
 # Extract eboot.bin and font from base vpk
 with zipfile.ZipFile(src_vpk, "r") as z_in:
     eboot_data = z_in.read("eboot.bin")
@@ -45,14 +66,9 @@ with zipfile.ZipFile(src_vpk, "r") as z_in:
 with open(os.path.join(base_dir, "assets", "main.js"), "rb") as f:
     main_js_data = f.read()
 
-with open(os.path.join(base_dir, "sce_sys", "icon0.png"), "rb") as f:
-    icon_data = f.read()
-
-with open(os.path.join(base_dir, "sce_sys", "livearea", "contents", "bg.png"), "rb") as f:
-    bg_data = f.read()
-
-with open(os.path.join(base_dir, "sce_sys", "livearea", "contents", "startup.png"), "rb") as f:
-    startup_data = f.read()
+icon_data = get_compliant_vita_png(os.path.join(base_dir, "sce_sys", "icon0.png"), (128, 128), True)
+bg_data = get_compliant_vita_png(os.path.join(base_dir, "sce_sys", "livearea", "contents", "bg.png"), (840, 500), False)
+startup_data = get_compliant_vita_png(os.path.join(base_dir, "sce_sys", "livearea", "contents", "startup.png"), (280, 158), True)
 
 with open(os.path.join(base_dir, "sce_sys", "livearea", "contents", "template.xml"), "rb") as f:
     template_data = f.read()
@@ -71,3 +87,10 @@ with zipfile.ZipFile(out_vpk, "w", zipfile.ZIP_DEFLATED) as z_out:
 
 file_size = os.path.getsize(out_vpk)
 print(f"3. VPK Build complete! Output: {out_vpk} ({file_size} bytes)")
+
+# Copy to Desktop for user convenience
+try:
+    shutil.copy2(out_vpk, desktop_vpk)
+    print(f"4. Copied to Desktop: {desktop_vpk}")
+except Exception as e:
+    print(f"Warning: Could not copy to desktop: {e}")
