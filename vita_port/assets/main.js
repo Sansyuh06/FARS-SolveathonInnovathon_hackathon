@@ -1,6 +1,6 @@
 // =============================================================================
 // FARSVERSE POCKET -- NVIDIA OMNIVERSE USD COMPOSER & DRIVE SIM 1:1 REPLICA
-// REALISTIC 3D CAD ENGINE: SOLID SHADED MESHES, GIZMOS, SENSOR PIP & DRIVE NET
+// ULTRA-REALISTIC 3D CAD ENGINE: SOLID LIT WAREHOUSE, PBR MESHES, SENSOR PIP
 // =============================================================================
 
 const font = Font.load_font_file("app0:/assets/segoeui.ttf");
@@ -61,7 +61,7 @@ var TEXT_REGULAR    = rgba(200, 200, 200, 255);
 var TEXT_MUTED      = rgba(140, 140, 140, 255);
 var TEXT_DIM        = rgba(90, 90, 90, 255);
 
-var SHADOW_COLOR    = rgba(8, 8, 8, 150);
+var SHADOW_COLOR    = rgba(8, 8, 8, 160);
 
 // -----------------------------------------------------------------------------
 // APPLICATION & SIMULATION STATE
@@ -69,7 +69,6 @@ var SHADOW_COLOR    = rgba(8, 8, 8, 150);
 var running = true;
 var simTime = 0.0;
 var simFrame = 142;
-var simPlaying = true;
 var hostIp = "192.168.0.135";
 var hostPort = 8080;
 var hostOnline = false;
@@ -96,7 +95,7 @@ var orbitYaw   = 0.65;  // ~37 degrees azimuth
 var orbitPitch = 0.45;  // ~26 degrees elevation
 var camDist    = 185.0; // Distance to focus target
 var targetX    = 0.0;
-var targetY    = 10.0;  // Focus on center of warehouse floor
+var targetY    = 8.0;   // Focus on center of warehouse floor
 var targetZ    = 0.0;
 
 var camX = 0.0, camY = 0.0, camZ = 0.0;
@@ -224,7 +223,7 @@ var predefinedModels = [
 ];
 
 // -----------------------------------------------------------------------------
-// ACTIVE USD PRIMS IN WAREHOUSE SCENE
+// ACTIVE USD PRIMS IN WAREHOUSE SCENE (SPACED REALISTICALLY ACROSS AISLES)
 // -----------------------------------------------------------------------------
 var robots = [
     {
@@ -247,13 +246,13 @@ var robots = [
         name: "Courier Bot-02",
         modelId: "MDL-CARTER",
         primPath: "/World/Robots/AMR_02_Courier",
-        x: -45.0, y: 0.0, z: 20.0,
-        tx: -45.0, tz: 20.0,
+        x: -45.0, y: 0.0, z: 25.0,
+        tx: -45.0, tz: 25.0,
         rotY: 1.2,
         speed: 0.85,
         battery: 88.0,
         state: "PATROLLING",
-        task: "Corridor Routine Inspection",
+        task: "Left Aisle Security Patrol",
         aiConfidence: "98.7%",
         color: OMNI_CYAN
     },
@@ -262,13 +261,13 @@ var robots = [
         name: "UV-C Tower-03",
         modelId: "MDL-UVC",
         primPath: "/World/Robots/AMR_03_Sterilizer",
-        x: 45.0, y: 0.0, z: 25.0,
-        tx: 45.0, tz: 25.0,
+        x: 45.0, y: 0.0, z: 30.0,
+        tx: 45.0, tz: 30.0,
         rotY: -0.8,
         speed: 0.65,
         battery: 76.2,
         state: "STERILIZING",
-        task: "Emergency Ward UV-C Sweep",
+        task: "Decontamination Bay Sweep",
         aiConfidence: "97.9%",
         color: OMNI_VIOLET
     },
@@ -277,13 +276,13 @@ var robots = [
         name: "Patient Escort-04",
         modelId: "MDL-CARTER",
         primPath: "/World/Robots/AMR_04_Escort",
-        x: -15.0, y: 0.0, z: -45.0,
-        tx: -15.0, tz: -45.0,
+        x: -20.0, y: 0.0, z: -48.0,
+        tx: -20.0, tz: -48.0,
         rotY: 2.1,
         speed: 0.95,
         battery: 64.8,
         state: "NAVIGATING",
-        task: "Escort to Room 12",
+        task: "Transit Lane Crossing",
         aiConfidence: "98.2%",
         color: OMNI_BLUE
     },
@@ -292,13 +291,13 @@ var robots = [
         name: "Crash Cart-05",
         modelId: "MDL-CRASH",
         primPath: "/World/Props/Emergency_Crash_Cart",
-        x: 35.0, y: 0.0, z: -35.0,
-        tx: 35.0, tz: -35.0,
+        x: 38.0, y: 0.0, z: -35.0,
+        tx: 38.0, tz: -35.0,
         rotY: 3.14,
         speed: 1.40,
         battery: 52.1,
-        state: "PATROLLING",
-        task: "Perimeter Sector Scan",
+        state: "STANDBY",
+        task: "Emergency Bay Standby",
         aiConfidence: "96.5%",
         color: OMNI_ORANGE
     }
@@ -310,8 +309,8 @@ var sceneProps = [
         name: "Compressor_Pump",
         modelId: "MDL-PUMP",
         primPath: "/World/Machinery/Industrial_Compressor_Pump",
-        x: 20.0, y: 0.0, z: 0.0,
-        tx: 20.0, tz: 0.0,
+        x: 25.0, y: 0.0, z: 2.0,
+        tx: 25.0, tz: 2.0,
         rotY: 0.0,
         speed: 0.0,
         battery: 100.0,
@@ -400,14 +399,10 @@ function project3D(wx, wy, wz) {
     var camUp    = dx * Ux + dy * Uy + dz * Uz;
     var camDepth = dx * Fx + dy * Fy + dz * Fz;
 
-    if (camDepth <= 5.0) return null;
+    if (camDepth <= 2.0) return null;
 
     var sx = VP_CX + (camRight / camDepth) * FOCAL;
     var sy = VP_CY - (camUp / camDepth) * FOCAL;
-
-    if (sx < VP_X - 35 || sx > VP_X + VP_W + 35 || sy < VP_Y - 35 || sy > VP_Y + VP_H + 35) {
-        return null;
-    }
 
     return { x: sx, y: sy, depth: camDepth };
 }
@@ -416,59 +411,74 @@ function drawLine3D(x1, y1, z1, x2, y2, z2, color) {
     var p1 = project3D(x1, y1, z1);
     var p2 = project3D(x2, y2, z2);
     if (!p1 || !p2) return;
+    if (p1.x < VP_X && p2.x < VP_X) return;
+    if (p1.x > VP_X + VP_W && p2.x > VP_X + VP_W) return;
+    if (p1.y < VP_Y && p2.y < VP_Y) return;
+    if (p1.y > VP_Y + VP_H && p2.y > VP_Y + VP_H) return;
     Screen.draw_line(p1.x, p1.y, p2.x, p2.y, color);
 }
 
 // =============================================================================
-// SCANLINE FILLED POLYGON RASTERIZER (FAST HARDWARE-ACCELERATED)
+// ROBUST 2D TRIANGLE RASTERIZER (ZERO ARTIFACTS, PERFECT CONVEXITY)
 // =============================================================================
-function fillQuad(ax, ay, bx, by, cx, cy, dx, dy, color, clX0, clY0, clX1, clY1) {
-    var minY = ay, maxY = ay;
-    if (by < minY) minY = by; if (by > maxY) maxY = by;
-    if (cy < minY) minY = cy; if (cy > maxY) maxY = cy;
-    if (dy < minY) dy = dy; if (dy > maxY) maxY = dy;
+function fillTriangle(p0, p1, p2, color, clX0, clY0, clX1, clY1) {
+    // Sort by Y ascending: p0.y <= p1.y <= p2.y
+    var y0 = p0.y, y1 = p1.y, y2 = p2.y;
+    var x0 = p0.x, x1 = p1.x, x2 = p2.x;
 
-    var sY = (minY | 0) + 1;
-    if (sY < clY0) sY = clY0;
-    var eY = maxY | 0;
-    if (eY > clY1) eY = clY1;
-    if (sY & 1) sY++;
+    if (y0 > y1) { var ty = y0; y0 = y1; y1 = ty; var tx = x0; x0 = x1; x1 = tx; }
+    if (y1 > y2) { var ty = y1; y1 = y2; y2 = ty; var tx = x1; x1 = x2; x2 = tx; }
+    if (y0 > y1) { var ty = y0; y0 = y1; y1 = ty; var tx = x0; x0 = x1; x1 = tx; }
+
+    var totalH = y2 - y0;
+    if (totalH < 0.5) return;
+    if (y2 < clY0 || y0 > clY1) return;
+
+    var sY = Math.max(clY0, (y0 | 0) + 1);
+    var eY = Math.min(clY1, y2 | 0);
     if (sY > eY) return;
 
+    var invTotalH = 1.0 / totalH;
+    var h01 = y1 - y0;
+    var invH01 = (h01 > 0.001) ? (1.0 / h01) : 0;
+    var h12 = y2 - y1;
+    var invH12 = (h12 > 0.001) ? (1.0 / h12) : 0;
+
     for (var y = sY; y <= eY; y += 2) {
-        var xL = 9999, xR = -9999;
-        if ((ay <= y && by > y) || (by <= y && ay > y)) {
-            var x = ax + (y - ay) / (by - ay) * (bx - ax);
-            if (x < xL) xL = x; if (x > xR) xR = x;
+        var t02 = (y - y0) * invTotalH;
+        var xA = x0 + t02 * (x2 - x0);
+
+        var xB;
+        if (y < y1) {
+            var t01 = (y - y0) * invH01;
+            xB = x0 + t01 * (x1 - x0);
+        } else {
+            var t12 = (y - y1) * invH12;
+            xB = x1 + t12 * (x2 - x1);
         }
-        if ((by <= y && cy > y) || (cy <= y && by > y)) {
-            var x = bx + (y - by) / (cy - by) * (cx - bx);
-            if (x < xL) xL = x; if (x > xR) xR = x;
-        }
-        if ((cy <= y && dy > y) || (dy <= y && cy > y)) {
-            var x = cx + (y - cy) / (dy - cy) * (dx - cx);
-            if (x < xL) xL = x; if (x > xR) xR = x;
-        }
-        if ((dy <= y && ay > y) || (ay <= y && dy > y)) {
-            var x = dx + (y - dy) / (ay - dy) * (ax - dx);
-            if (x < xL) xL = x; if (x > xR) xR = x;
-        }
-        if (xL < xR) {
-            var lx = xL | 0;
-            if (lx < clX0) lx = clX0;
-            var rx = xR | 0;
-            if (rx > clX1) rx = clX1;
-            if (rx > lx) Screen.draw_rectangle(lx, y, rx - lx, 2, color);
-        }
+
+        var lx = (xA < xB ? xA : xB) | 0;
+        var rx = (xA > xB ? xA : xB) | 0;
+
+        if (lx < clX0) lx = clX0;
+        if (rx > clX1) rx = clX1;
+        var h = (y + 2 <= clY1) ? 2 : (clY1 - y);
+        if (h > 0 && rx > lx) Screen.draw_rectangle(lx, y, rx - lx, h, color);
     }
 }
 
-// Directional Key Light Vector (from upper-left-front)
+// Quad fill decomposed into two planar triangles
+function fillQuad(p0, p1, p2, p3, color, clX0, clY0, clX1, clY1) {
+    fillTriangle(p0, p1, p2, color, clX0, clY0, clX1, clY1);
+    fillTriangle(p0, p2, p3, color, clX0, clY0, clX1, clY1);
+}
+
+// Directional Light & Fog
 var LIGHT_X = 0.35, LIGHT_Y = 0.82, LIGHT_Z = 0.45;
 var FOG_NEAR = 110.0, FOG_RANGE_INV = 1.0 / 300.0;
-var FOG_R = 24, FOG_G = 25, FOG_B = 26;
+var FOG_R = 72, FOG_G = 75, FOG_B = 80;
 
-// Solid Shaded 3D Box with Directional Lighting, Specular Glints & Edge Outlines
+// Solid Shaded 3D Box with Directional Lighting & Edge Outlines
 function drawSolidBox3D(cx, cy, cz, sx, sy, sz, rotY, baseColor, selColor) {
     var hx = sx * 0.5, hy = sy * 0.5, hz = sz * 0.5;
     var cosR = Math.cos(rotY), sinR = Math.sin(rotY);
@@ -490,41 +500,41 @@ function drawSolidBox3D(cx, cy, cz, sx, sy, sz, rotY, baseColor, selColor) {
     var fc = 0;
     var fv = [];
 
-    // Top face
+    // Top face (v4, v5, v6, v7)
     if (tcY > 0 && v4 && v5 && v6 && v7) {
-        var br = 0.35 + Math.max(0, LIGHT_Y) * 0.65;
+        var br = 0.40 + Math.max(0, LIGHT_Y) * 0.60;
         var dp = (v4.depth + v5.depth + v6.depth + v7.depth) * 0.25;
-        fv[fc++] = {a:v7, b:v6, c:v5, d:v4, br:br, dp:dp};
+        fv[fc++] = {a:v4, b:v5, c:v6, d:v7, br:br, dp:dp};
     }
     // Bottom face
     if (tcY < 0 && v0 && v1 && v2 && v3) {
-        var br = 0.2;
+        var br = 0.22;
         var dp = (v0.depth + v1.depth + v2.depth + v3.depth) * 0.25;
         fv[fc++] = {a:v0, b:v1, c:v2, d:v3, br:br, dp:dp};
     }
     // Front face (+Z)
     var fnDot = sinR * tcX + cosR * tcZ;
     if (fnDot > 0 && v3 && v2 && v6 && v7) {
-        var br = 0.25 + Math.max(0, sinR * LIGHT_X + cosR * LIGHT_Z) * 0.65;
+        var br = 0.28 + Math.max(0, sinR * LIGHT_X + cosR * LIGHT_Z) * 0.65;
         var dp = (v3.depth + v2.depth + v6.depth + v7.depth) * 0.25;
         fv[fc++] = {a:v3, b:v2, c:v6, d:v7, br:br, dp:dp};
     }
     // Back face (-Z)
     if (fnDot < 0 && v0 && v1 && v5 && v4) {
-        var br = 0.25 + Math.max(0, -sinR * LIGHT_X - cosR * LIGHT_Z) * 0.65;
+        var br = 0.28 + Math.max(0, -sinR * LIGHT_X - cosR * LIGHT_Z) * 0.65;
         var dp = (v0.depth + v1.depth + v5.depth + v4.depth) * 0.25;
-        fv[fc++] = {a:v4, b:v5, c:v1, d:v0, br:br, dp:dp};
+        fv[fc++] = {a:v0, b:v4, c:v5, d:v1, br:br, dp:dp};
     }
     // Right face (+X)
     var rxDot = cosR * tcX - sinR * tcZ;
     if (rxDot > 0 && v1 && v2 && v6 && v5) {
-        var br = 0.25 + Math.max(0, cosR * LIGHT_X - sinR * LIGHT_Z) * 0.65;
+        var br = 0.28 + Math.max(0, cosR * LIGHT_X - sinR * LIGHT_Z) * 0.65;
         var dp = (v1.depth + v2.depth + v6.depth + v5.depth) * 0.25;
-        fv[fc++] = {a:v5, b:v6, c:v2, d:v1, br:br, dp:dp};
+        fv[fc++] = {a:v1, b:v5, c:v6, d:v2, br:br, dp:dp};
     }
     // Left face (-X)
     if (rxDot < 0 && v0 && v3 && v7 && v4) {
-        var br = 0.25 + Math.max(0, -cosR * LIGHT_X + sinR * LIGHT_Z) * 0.65;
+        var br = 0.28 + Math.max(0, -cosR * LIGHT_X + sinR * LIGHT_Z) * 0.65;
         var dp = (v0.depth + v3.depth + v7.depth + v4.depth) * 0.25;
         fv[fc++] = {a:v0, b:v3, c:v7, d:v4, br:br, dp:dp};
     }
@@ -552,18 +562,17 @@ function drawSolidBox3D(cx, cy, cz, sx, sy, sz, rotY, baseColor, selColor) {
         if (fogT < 0) fogT = 0; if (fogT > 1) fogT = 1;
         if (fogT > 0) {
             fr = (fr + (FOG_R - fr) * fogT) | 0;
-            fg = (fg + (FOG_G - fogT * fg) * fogT) | 0;
+            fg = (fg + (FOG_G - fg) * fogT) | 0;
             fb = (fb + (FOG_B - fb) * fogT) | 0;
         }
 
         if (fr > 255) fr = 255; if (fg > 255) fg = 255; if (fb > 255) fb = 255;
         if (fr < 0) fr = 0; if (fg < 0) fg = 0; if (fb < 0) fb = 0;
 
-        fillQuad(f.a.x, f.a.y, f.b.x, f.b.y, f.c.x, f.c.y, f.d.x, f.d.y,
-                 rgba(fr, fg, fb, 255), VP_X, VP_Y, VP_X + VP_W, VP_Y + VP_H);
+        fillQuad(f.a, f.b, f.c, f.d, rgba(fr, fg, fb, 255), VP_X, VP_Y, VP_X + VP_W, VP_Y + VP_H);
 
         // Chamfered CAD edge highlights
-        var edgeCol = rgba(Math.min(255, fr + 26), Math.min(255, fg + 26), Math.min(255, fb + 26), 255);
+        var edgeCol = rgba(Math.min(255, fr + 24), Math.min(255, fg + 24), Math.min(255, fb + 24), 255);
         Screen.draw_line(f.a.x, f.a.y, f.b.x, f.b.y, edgeCol);
         Screen.draw_line(f.b.x, f.b.y, f.c.x, f.c.y, edgeCol);
         Screen.draw_line(f.c.x, f.c.y, f.d.x, f.d.y, edgeCol);
@@ -591,8 +600,7 @@ function drawGroundShadow(cx, cz, halfW, halfD) {
     var s2 = project3D(cx + halfW, 0.08, cz + halfD);
     var s3 = project3D(cx - halfW, 0.08, cz + halfD);
     if (s0 && s1 && s2 && s3) {
-        fillQuad(s0.x, s0.y, s1.x, s1.y, s2.x, s2.y, s3.x, s3.y,
-                 SHADOW_COLOR, VP_X, VP_Y, VP_X + VP_W, VP_Y + VP_H);
+        fillQuad(s0, s1, s2, s3, SHADOW_COLOR, VP_X, VP_Y, VP_X + VP_W, VP_Y + VP_H);
     }
 }
 
@@ -608,25 +616,19 @@ function renderTransformGizmo(cx, cy, cz) {
     var yHead = project3D(cx, cy + gLen, cz);
     var zHead = project3D(cx, cy, cz + gLen);
 
-    // Center pivot sphere
     Screen.draw_fill_circle(4, origin.x, origin.y, OMNI_ORANGE);
     Screen.draw_fill_circle(2, origin.x, origin.y, TEXT_BRIGHT);
 
-    // X Axis (Red)
     if (xHead) {
         Screen.draw_line(origin.x, origin.y, xHead.x, xHead.y, rgba(240, 60, 60, 255));
         Screen.draw_fill_circle(3, xHead.x, xHead.y, rgba(240, 60, 60, 255));
         drawText(xHead.x + 3, xHead.y - 4, "X", 10, rgba(240, 60, 60, 255));
     }
-
-    // Y Axis (Green)
     if (yHead) {
         Screen.draw_line(origin.x, origin.y, yHead.x, yHead.y, NV_GREEN);
         Screen.draw_fill_circle(3, yHead.x, yHead.y, NV_GREEN);
         drawText(yHead.x + 3, yHead.y - 4, "Y", 10, NV_GREEN);
     }
-
-    // Z Axis (Blue)
     if (zHead) {
         Screen.draw_line(origin.x, origin.y, zHead.x, zHead.y, rgba(50, 140, 255, 255));
         Screen.draw_fill_circle(3, zHead.x, zHead.y, rgba(50, 140, 255, 255));
@@ -635,10 +637,8 @@ function renderTransformGizmo(cx, cy, cz) {
 }
 
 // -----------------------------------------------------------------------------
-// NVIDIA DRIVE SIM MULTI-SENSOR PERCEPTION SUITE
+// NVIDIA DRIVE SIM MULTI-SENSOR PERCEPTION SUITE (FOCUSED ON ACTIVE TARGET)
 // -----------------------------------------------------------------------------
-
-// 1. AI 3D Bounding Box with CAD Bracket Accents and Confidence Pill
 function drawAIPerceptionBox(cx, cy, cz, sx, sy, sz, label, color) {
     var hx = sx * 0.5 + 1.2, hy = sy * 0.5 + 1.2, hz = sz * 0.5 + 1.2;
     var v = [
@@ -671,12 +671,11 @@ function drawAIPerceptionBox(cx, cy, cz, sx, sy, sz, label, color) {
     }
 }
 
-// 2. Multi-Beam 360° LiDAR Point Cloud with Distance-Intensity Color Coding
 function renderLiDARPointCloud(bot) {
     var lidarY = 9.2;
     var sweepA = simTime * 6.5;
 
-    // Ground Range Rings with distance labels
+    // Ground Range Rings
     var rings = [ 12.0, 24.0, 36.0, 48.0 ];
     for (var r = 0; r < rings.length; r++) {
         var rad = rings[r];
@@ -684,9 +683,7 @@ function renderLiDARPointCloud(bot) {
         for (var i = 0; i <= 20; i++) {
             var a = (i / 20) * Math.PI * 2;
             var pt = project3D(bot.x + Math.cos(a) * rad, 0.15, bot.z + Math.sin(a) * rad);
-            if (lastPt && pt) {
-                Screen.draw_line(lastPt.x, lastPt.y, pt.x, pt.y, rgba(0, 210, 240, 40));
-            }
+            if (lastPt && pt) Screen.draw_line(lastPt.x, lastPt.y, pt.x, pt.y, rgba(0, 210, 240, 50));
             lastPt = pt;
         }
     }
@@ -702,20 +699,16 @@ function renderLiDARPointCloud(bot) {
         var hitZ = bot.z + Math.cos(angle) * dist;
         var hitY = (Math.sin(angle * 4.0) > 0.3) ? 5.5 : 0.4;
 
-        // Color coding by return distance (NVIDIA DRIVE Sim intensity gradient)
-        var beamColor = (dist < 15.0) ? rgba(235, 60, 60, 70) : ((dist < 25.0) ? rgba(118, 185, 0, 70) : rgba(0, 220, 245, 60));
+        var beamColor = (dist < 15.0) ? rgba(235, 60, 60, 75) : ((dist < 25.0) ? rgba(118, 185, 0, 75) : rgba(0, 220, 245, 65));
         var dotColor  = (dist < 15.0) ? OMNI_RED : ((dist < 25.0) ? NV_GREEN : OMNI_CYAN);
 
         drawLine3D(bot.x, lidarY, bot.z, hitX, hitY, hitZ, beamColor);
 
         var pPt = project3D(hitX, hitY, hitZ);
-        if (pPt) {
-            Screen.draw_rectangle(pPt.x - 1, pPt.y - 1, 3, 3, dotColor);
-        }
+        if (pPt) Screen.draw_rectangle(pPt.x - 1, pPt.y - 1, 3, 3, dotColor);
     }
 }
 
-// 3. Autonomous Predictive Trajectory Planning Ribbon
 function renderTrajectoryRibbon(bot) {
     var steps = 10;
     var prevL = null, prevR = null, prevC = null;
@@ -732,11 +725,10 @@ function renderTrajectoryRibbon(bot) {
         if (prevL && prevR && pL && pR) {
             Screen.draw_line(prevL.x, prevL.y, pL.x, pL.y, NV_GREEN);
             Screen.draw_line(prevR.x, prevR.y, pR.x, pR.y, NV_GREEN);
-            Screen.draw_line(pL.x, pL.y, pR.x, pR.y, rgba(118, 185, 0, 85));
+            Screen.draw_line(pL.x, pL.y, pR.x, pR.y, rgba(118, 185, 0, 95));
             if (prevC && pC) Screen.draw_line(prevC.x, prevC.y, pC.x, pC.y, TEXT_BRIGHT);
         }
 
-        // Waypoint timestamp beads
         if (s === 4 || s === 7 || s === 10) {
             if (pC) {
                 Screen.draw_fill_circle(3, pC.x, pC.y, OMNI_ORANGE);
@@ -748,7 +740,6 @@ function renderTrajectoryRibbon(bot) {
     }
 }
 
-// 4. Multi-Camera Sensor Viewing Frustum
 function renderCameraFrustum(bot) {
     var cosR = Math.cos(bot.rotY), sinR = Math.sin(bot.rotY);
     var camPos = { x: bot.x + sinR * 7.5, y: 5.8, z: bot.z + cosR * 7.5 };
@@ -763,7 +754,7 @@ function renderCameraFrustum(bot) {
     var c3 = project3D(camPos.x + sinR * fDist + cosR * (fW/2), camPos.y - fH/2, camPos.z + cosR * fDist - sinR * (fW/2));
     var c4 = project3D(camPos.x + sinR * fDist - cosR * (fW/2), camPos.y - fH/2, camPos.z + cosR * fDist + sinR * (fW/2));
 
-    var fColor = rgba(118, 185, 0, 90);
+    var fColor = rgba(118, 185, 0, 100);
     if (c1 && c2 && c3 && c4) {
         Screen.draw_line(pApex.x, pApex.y, c1.x, c1.y, fColor);
         Screen.draw_line(pApex.x, pApex.y, c2.x, c2.y, fColor);
@@ -777,7 +768,6 @@ function renderCameraFrustum(bot) {
     }
 }
 
-// 5. On-Board Camera Picture-In-Picture (PIP) View (NVIDIA DRIVE Sim Signature)
 function renderSensorPIP(bot) {
     if (!showSensorPIP) return;
 
@@ -786,31 +776,26 @@ function renderSensorPIP(bot) {
     var pipW = 140;
     var pipH = 86;
 
-    // Monitor frame
     Screen.draw_rectangle(pipX, pipY, pipW, pipH, rgba(14, 16, 18, 240));
     Screen.draw_line(pipX, pipY, pipX + pipW, pipY, OMNI_BORDER_HI);
     Screen.draw_line(pipX, pipY + pipH, pipX + pipW, pipY + pipH, OMNI_BORDER_HI);
     Screen.draw_line(pipX, pipY, pipX, pipY + pipH, OMNI_BORDER_HI);
     Screen.draw_line(pipX + pipW, pipY, pipX + pipW, pipY + pipH, OMNI_BORDER_HI);
 
-    // Title bar
     Screen.draw_rectangle(pipX, pipY, pipW, 13, rgba(20, 30, 22, 255));
     Screen.draw_fill_circle(3, pipX + 8, pipY + 6, NV_GREEN);
     drawText(pipX + 16, pipY + 10, "CAM 0: DRIVE-NET", 9, TEXT_BRIGHT);
 
-    // Simulated camera sensor viewport (sky & floor perspective)
     var viewY = pipY + 14;
     var viewH = pipH - 14;
-    Screen.draw_rectangle(pipX + 2, viewY, pipW - 4, viewH * 0.45, rgba(28, 32, 38, 255)); // Wall
-    Screen.draw_rectangle(pipX + 2, viewY + viewH * 0.45, pipW - 4, viewH * 0.55, rgba(42, 45, 50, 255)); // Floor
+    Screen.draw_rectangle(pipX + 2, viewY, pipW - 4, viewH * 0.45, rgba(28, 32, 38, 255));
+    Screen.draw_rectangle(pipX + 2, viewY + viewH * 0.45, pipW - 4, viewH * 0.55, rgba(42, 45, 50, 255));
 
-    // Aisle perspective lines
     var vpMidX = pipX + (pipW >> 1);
     var vpHozY = viewY + Math.floor(viewH * 0.45);
     Screen.draw_line(vpMidX - 10, vpHozY, pipX + 15, pipY + pipH - 2, rgba(245, 210, 40, 180));
     Screen.draw_line(vpMidX + 10, vpHozY, pipX + pipW - 15, pipY + pipH - 2, rgba(245, 210, 40, 180));
 
-    // Simulated Oncoming Obstacle Box with AI target crosshair
     var objX = vpMidX + Math.sin(simTime * 1.5) * 16;
     var objY = vpHozY + 8;
     Screen.draw_rectangle(objX - 12, objY - 10, 24, 20, rgba(60, 140, 240, 160));
@@ -822,7 +807,7 @@ function renderSensorPIP(bot) {
 }
 
 // -----------------------------------------------------------------------------
-// DETAILED 3D OBJECT RENDERING (CARTER AMR, UV-C, CRASH CART, MACHINERY)
+// SOLID CAD ROBOT MESHES
 // -----------------------------------------------------------------------------
 function renderCarterAMR(bot, isSelected) {
     var selCol = isSelected ? OMNI_ORANGE : 0;
@@ -831,7 +816,7 @@ function renderCarterAMR(bot, isSelected) {
     // 1. Lower Chassis Skid Base
     drawSolidBox3D(bot.x, 2.5, bot.z, 11.5, 3.5, 15.0, bot.rotY, chassisCol, selCol);
 
-    // 2. Yellow/Black Hazard Side Skirt Strips
+    // 2. Yellow Hazard Skirt Trim
     drawSolidBox3D(bot.x, 1.2, bot.z, 11.8, 1.0, 14.0, bot.rotY, OMNI_YELLOW, 0);
 
     // 3. Side Drive Wheels (Left & Right)
@@ -841,18 +826,17 @@ function renderCarterAMR(bot, isSelected) {
     drawSolidBox3D(wL_X, 2.2, wL_Z, 1.6, 4.2, 4.2, bot.rotY, rgba(22, 22, 22, 255), 0);
     drawSolidBox3D(wR_X, 2.2, wR_Z, 1.6, 4.2, 4.2, bot.rotY, rgba(22, 22, 22, 255), 0);
 
-    // 4. Payload Top Deck Plate
+    // 4. Payload Deck Plate
     drawSolidBox3D(bot.x, 5.2, bot.z, 9.5, 1.8, 12.5, bot.rotY, bot.color, selCol);
 
-    // 5. Front Stereo Depth Camera Sensor Bar
+    // 5. Front Stereo Depth Camera Bar
     var camX_pos = bot.x + sinR * 7.4, camZ_pos = bot.z + cosR * 7.4;
     drawSolidBox3D(camX_pos, 5.0, camZ_pos, 7.0, 1.5, 1.8, bot.rotY, rgba(20, 20, 20, 255), 0);
 
-    // 6. Top Cylindrical LiDAR Pedestal & Rotating Puck Scanner
+    // 6. Cylindrical LiDAR Pedestal & Rotating Puck
     drawSolidBox3D(bot.x, 7.5, bot.z, 4.0, 2.5, 4.0, bot.rotY, rgba(30, 32, 35, 255), selCol);
     drawSolidBox3D(bot.x, 9.4, bot.z, 3.2, 1.8, 3.2, simTime * 4.5, rgba(16, 16, 16, 255), selCol);
 
-    // Pulsing Status LED Ring
     var ringPt = project3D(bot.x, 6.4, bot.z);
     if (ringPt) Screen.draw_fill_circle(3, ringPt.x, ringPt.y, NV_GREEN);
 }
@@ -865,7 +849,6 @@ function renderUVCTower(bot, isSelected) {
     drawSolidBox3D(bot.x, 11.5, bot.z, 4.2, 13.0, 4.2, bot.rotY, OMNI_VIOLET, selCol);
     drawSolidBox3D(bot.x, 18.5, bot.z, 7.5, 2.2, 7.5, bot.rotY, rgba(42, 44, 48, 255), selCol);
 
-    // Violet sterilizing glow core
     var corePt = project3D(bot.x, 11.5, bot.z);
     if (corePt) Screen.draw_fill_circle(4, corePt.x, corePt.y, rgba(185, 95, 255, 200));
 }
@@ -873,52 +856,101 @@ function renderUVCTower(bot, isSelected) {
 function renderCrashCart(bot, isSelected) {
     var selCol = isSelected ? OMNI_ORANGE : 0;
     drawSolidBox3D(bot.x, 4.8, bot.z, 8.5, 8.5, 12.0, bot.rotY, OMNI_RED, selCol);
-    // Medical tray top & monitor
     drawSolidBox3D(bot.x, 10.2, bot.z, 6.5, 2.8, 9.0, bot.rotY, rgba(235, 235, 235, 255), selCol);
     drawSolidBox3D(bot.x - 2.0, 13.0, bot.z, 1.5, 3.5, 4.5, bot.rotY, rgba(30, 30, 30, 255), selCol);
+}
+
+// -----------------------------------------------------------------------------
+// WAREHOUSE ARCHITECTURE: LIT CONCRETE FLOOR & ENVIRONMENT RENDERING
+// -----------------------------------------------------------------------------
+function renderWarehouseEnvironment() {
+    var horizonY = Math.max(VP_Y + 30, Math.min(VP_Y + VP_H - 40, (VP_CY - Math.tan(orbitPitch) * FOCAL) | 0));
+
+    // 1. High-Bay Warehouse Background Wall (Industrial Corrugated Metal & Steel)
+    Screen.draw_rectangle(VP_X, VP_Y, VP_W, horizonY - VP_Y, rgba(44, 47, 54, 255));
+    // Ceiling girder
+    Screen.draw_rectangle(VP_X, VP_Y, VP_W, 8, rgba(30, 32, 36, 255));
+    // Lower horizontal structural steel I-beam
+    Screen.draw_rectangle(VP_X, horizonY - 12, VP_W, 6, rgba(58, 62, 70, 255));
+    Screen.draw_line(VP_X, horizonY - 6, VP_X + VP_W, horizonY - 6, rgba(75, 80, 90, 255));
+    Screen.draw_line(VP_X, horizonY, VP_X + VP_W, horizonY, rgba(32, 34, 38, 255));
+
+    // Wall vertical panel seams & rivet lines
+    for (var wx = VP_X + 45; wx < VP_X + VP_W; wx += 60) {
+        Screen.draw_line(wx, VP_Y + 8, wx, horizonY - 12, rgba(36, 38, 44, 255));
+    }
+    drawText(VP_X + 16, VP_Y + 18, "SECTOR 04 - ISAAC SIM AUTOMATED LOGISTICS [USD COMPOSER]", 9, rgba(145, 150, 160, 200));
+
+    // 2. Base Solid Lit Concrete Ground Floor
+    Screen.draw_rectangle(VP_X, horizonY, VP_W, (VP_Y + VP_H) - horizonY, rgba(62, 65, 71, 255));
+
+    // 3. Polished Central Transit Corridor Roadway
+    var cr0 = project3D(-16.0, 0.04, -85.0);
+    var cr1 = project3D( 16.0, 0.04, -85.0);
+    var cr2 = project3D( 16.0, 0.04,  85.0);
+    var cr3 = project3D(-16.0, 0.04,  85.0);
+    if (cr0 && cr1 && cr2 && cr3) {
+        fillQuad(cr0, cr1, cr2, cr3, rgba(74, 78, 85, 255), VP_X, VP_Y, VP_X + VP_W, VP_Y + VP_H);
+    }
+
+    // 4. Floor CAD Expansion Joints & Grid Lines
+    var gridColor = rgba(50, 53, 58, 255);
+    var extent = 85.0;
+    for (var c = -extent; c <= extent; c += 15.0) {
+        drawLine3D(c, 0.06, -extent, c, 0.06, extent, gridColor);
+        drawLine3D(-extent, 0.06, c, extent, 0.06, c, gridColor);
+    }
+
+    // 5. High-Visibility Yellow Safety Lane Strips
+    var laneL = -16.0, laneR = 16.0;
+    for (var lz = -75.0; lz <= 75.0; lz += 8.0) {
+        drawLine3D(laneL, 0.10, lz, laneL, 0.10, lz + 5.0, OMNI_YELLOW);
+        drawLine3D(laneR, 0.10, lz, laneR, 0.10, lz + 5.0, OMNI_YELLOW);
+    }
+
+    // Pedestrian Crosswalk Hatching
+    for (var px = -14.0; px <= 14.0; px += 3.5) {
+        drawLine3D(px, 0.10, -2.5, px, 0.10, 2.5, rgba(230, 230, 230, 220));
+    }
+
+    // Docking Bay Stalls & Charging Stations
+    // BAY 01 [CHARGING]
+    drawLine3D(-12.0, 0.10, -14.0, 12.0, 0.10, -14.0, rgba(0, 220, 245, 200));
+    drawLine3D(-12.0, 0.10, -26.0, 12.0, 0.10, -26.0, rgba(0, 220, 245, 200));
+    drawLine3D(-12.0, 0.10, -14.0, -12.0, 0.10, -26.0, rgba(0, 220, 245, 200));
+    drawLine3D( 12.0, 0.10, -14.0,  12.0, 0.10, -26.0, rgba(0, 220, 245, 200));
+    var dockPt1 = project3D(0, 0.15, -20.0);
+    if (dockPt1) drawText(dockPt1.x - 28, dockPt1.y - 4, "BAY 01 [CHARGING]", 9, OMNI_CYAN);
+
+    // BAY 02 [STAGING]
+    drawLine3D(-12.0, 0.10, 14.0, 12.0, 0.10, 14.0, rgba(245, 210, 40, 200));
+    drawLine3D(-12.0, 0.10, 26.0, 12.0, 0.10, 26.0, rgba(245, 210, 40, 200));
+    drawLine3D(-12.0, 0.10, 14.0, -12.0, 0.10, 26.0, rgba(245, 210, 40, 200));
+    drawLine3D( 12.0, 0.10, 14.0,  12.0, 0.10, 26.0, rgba(245, 210, 40, 200));
+    var dockPt2 = project3D(0, 0.15, 20.0);
+    if (dockPt2) drawText(dockPt2.x - 26, dockPt2.y - 4, "BAY 02 [STAGING]", 9, OMNI_YELLOW);
+
+    // 6. Architectural Support Columns with Hazard Bases
+    var pillars = [
+        { x: -65.0, z: -55.0 }, { x: 65.0, z: -55.0 },
+        { x: -65.0, z:  55.0 }, { x: 65.0, z:  55.0 }
+    ];
+    for (var p = 0; p < pillars.length; p++) {
+        var px = pillars[p].x, pz = pillars[p].z;
+        drawGroundShadow(px, pz, 4.5, 4.5);
+        // Yellow hazard base
+        drawSolidBox3D(px, 2.5, pz, 4.8, 5.0, 4.8, 0, OMNI_YELLOW, 0);
+        // Concrete column trunk
+        drawSolidBox3D(px, 18.0, pz, 4.0, 26.0, 4.0, 0, rgba(60, 64, 70, 255), 0);
+    }
 }
 
 // -----------------------------------------------------------------------------
 // MAIN 3D PERSPECTIVE VIEWPORT RENDERING
 // -----------------------------------------------------------------------------
 function renderMain3DScene() {
-    // 1. Perspective CAD Floor Grid & Concrete Aisle Markings
-    var gridColor    = rgba(46, 48, 52, 255);
-    var subGridColor = rgba(30, 32, 35, 255);
-    var axisColorX   = rgba(215, 55, 55, 220);  // Red X-axis
-    var axisColorZ   = rgba(55, 135, 225, 220); // Blue Z-axis
-
-    var extent = 90.0;
-    var step   = 15.0;
-
-    for (var c = -extent; c <= extent; c += step) {
-        var colZ = (c === 0) ? axisColorZ : ((Math.abs(c) % 30 === 0) ? gridColor : subGridColor);
-        drawLine3D(c, 0, -extent, c, 0, extent, colZ);
-
-        var colX = (c === 0) ? axisColorX : ((Math.abs(c) % 30 === 0) ? gridColor : subGridColor);
-        drawLine3D(-extent, 0, c, extent, 0, c, colX);
-    }
-
-    // Floor Detail: High-Contrast Hazard Caution Corridors (#F5D228)
-    var laneL = -18.0, laneR = 18.0;
-    for (var lz = -75.0; lz <= 75.0; lz += 10.0) {
-        drawLine3D(laneL, 0.1, lz, laneL, 0.1, lz + 6.0, OMNI_YELLOW);
-        drawLine3D(laneR, 0.1, lz, laneR, 0.1, lz + 6.0, OMNI_YELLOW);
-    }
-
-    // Pedestrian Crosswalk Hatching
-    for (var px = -16.0; px <= 16.0; px += 4.0) {
-        drawLine3D(px, 0.1, -2.5, px, 0.1, 2.5, rgba(230, 230, 230, 180));
-    }
-
-    // Docking Bay Stalls & Charging Stations
-    drawLine3D(-10.0, 0.1, -12.0, 10.0, 0.1, -12.0, rgba(230, 230, 230, 160));
-    drawLine3D(-10.0, 0.1, -24.0, 10.0, 0.1, -24.0, rgba(230, 230, 230, 160));
-    drawLine3D(-10.0, 0.1, -12.0, -10.0, 0.1, -24.0, rgba(230, 230, 230, 160));
-    drawLine3D(10.0, 0.1, -12.0, 10.0, 0.1, -24.0, rgba(230, 230, 230, 160));
-
-    var dockLabelPt = project3D(0, 0.2, -18.0);
-    if (dockLabelPt) drawText(dockLabelPt.x - 22, dockLabelPt.y - 4, "BAY 01 [DOCK]", 9, OMNI_CYAN);
+    // 1. Warehouse Architecture & Concrete Floor
+    renderWarehouseEnvironment();
 
     // 2. Ground Contact Shadows
     drawGroundShadow(sceneProps[0].x, sceneProps[0].z, 14.0, 8.0);
@@ -934,10 +966,10 @@ function renderMain3DScene() {
     for (var r = 0; r < rackCols.length; r++) {
         var rx = rackCols[r];
         var isRackSelected = (selectedPrimIdx === 6 && r === 0);
-        var rackBeamCol = isRackSelected ? OMNI_ORANGE : rgba(52, 98, 150, 255);
-        var shelfBeams  = rgba(230, 120, 25, 255); // Omniverse Orange load beams
+        var rackCol = isRackSelected ? OMNI_ORANGE : rgba(52, 98, 150, 255);
+        var beamCol = rgba(235, 115, 20, 255);
 
-        // 6 Vertical Structural Columns
+        // 6 Structural Vertical Uprights
         var uprights = [
             { x: rx - 7, z: -45 }, { x: rx + 7, z: -45 },
             { x: rx - 7, z:   0 }, { x: rx + 7, z:   0 },
@@ -945,35 +977,31 @@ function renderMain3DScene() {
         ];
 
         for (var u = 0; u < uprights.length; u++) {
-            drawLine3D(uprights[u].x, 0, uprights[u].z, uprights[u].x, 34, uprights[u].z, rackBeamCol);
+            drawSolidBox3D(uprights[u].x, 17.0, uprights[u].z, 1.8, 34.0, 1.8, 0, rackCol, 0);
         }
 
-        // Diagonal Cross-Bracing Wires ('X' bracing between columns)
-        drawLine3D(rx - 7, 0, -45, rx - 7, 34, 0, rgba(80, 120, 165, 140));
-        drawLine3D(rx - 7, 34, -45, rx - 7, 0, 0, rgba(80, 120, 165, 140));
-        drawLine3D(rx - 7, 0, 0, rx - 7, 34, 45, rgba(80, 120, 165, 140));
-        drawLine3D(rx - 7, 34, 0, rx - 7, 0, 45, rgba(80, 120, 165, 140));
-
-        // Horizontal Levels & Solid Shaded Cargo Crates
+        // Horizontal Levels & Pallet Cargo
         for (var lvl = 11; lvl <= 33; lvl += 11) {
-            drawLine3D(rx - 7, lvl, -45, rx + 7, lvl, -45, shelfBeams);
-            drawLine3D(rx - 7, lvl,   0, rx + 7, lvl,   0, shelfBeams);
-            drawLine3D(rx - 7, lvl,  45, rx + 7, lvl,  45, shelfBeams);
+            // Front & Rear Load Beams
+            drawSolidBox3D(rx, lvl, -45, 14.0, 1.6, 1.6, 0, beamCol, 0);
+            drawSolidBox3D(rx, lvl,   0, 14.0, 1.6, 1.6, 0, beamCol, 0);
+            drawSolidBox3D(rx, lvl,  45, 14.0, 1.6, 1.6, 0, beamCol, 0);
 
-            drawLine3D(rx - 7, lvl, -45, rx - 7, lvl, 45, shelfBeams);
-            drawLine3D(rx + 7, lvl, -45, rx + 7, lvl, 45, shelfBeams);
+            // Wooden Pallets
+            drawSolidBox3D(rx, lvl + 1.2, -22, 11.0, 1.0, 16.0, 0, rgba(160, 120, 68, 255), 0);
+            drawSolidBox3D(rx, lvl + 1.2,  22, 11.0, 1.0, 16.0, 0, rgba(160, 120, 68, 255), 0);
 
-            // Solid Pallet Crates with Straps
-            drawSolidBox3D(rx, lvl + 4, -22, 11, 7, 16, 0, rgba(165, 125, 78, 255), isRackSelected ? OMNI_ORANGE : 0);
-            drawSolidBox3D(rx, lvl + 4,  22, 11, 7, 16, 0, rgba(135, 148, 110, 255), isRackSelected ? OMNI_ORANGE : 0);
+            // Solid Pallet Cargo Crates with Labels
+            drawSolidBox3D(rx, lvl + 5.2, -22, 10.5, 7.0, 15.0, 0, rgba(165, 128, 82, 255), isRackSelected ? OMNI_ORANGE : 0);
+            drawSolidBox3D(rx, lvl + 5.2,  22, 10.5, 7.0, 15.0, 0, rgba(135, 148, 110, 255), isRackSelected ? OMNI_ORANGE : 0);
         }
 
-        // Safety Hazard Bollards
+        // Safety Hazard Bollards at aisle ends
         drawSolidBox3D(rx + (r === 0 ? 11 : -11), 4, -50, 3, 8, 3, 0, OMNI_YELLOW, 0);
         drawSolidBox3D(rx + (r === 0 ? 11 : -11), 4,  50, 3, 8, 3, 0, OMNI_YELLOW, 0);
     }
 
-    // 4. Industrial Compressor Pump Unit (Solid Shaded)
+    // 4. Industrial Compressor Pump Unit
     var pump = sceneProps[0];
     var isPumpSelected = (selectedPrimIdx === 5);
     var pumpSel = isPumpSelected ? OMNI_ORANGE : 0;
@@ -981,7 +1009,7 @@ function renderMain3DScene() {
     drawSolidBox3D(pump.x - 4, 15.0, pump.z, 8, 6, 8, 0, rgba(72, 82, 78, 255), pumpSel);
     drawSolidBox3D(pump.x + 5, 16.0, pump.z, 6, 8, 6, 0, rgba(62, 72, 68, 255), pumpSel);
 
-    if (showNeuralPerception) {
+    if (showNeuralPerception && isPumpSelected) {
         drawAIPerceptionBox(pump.x, 9.0, pump.z, 24, 18, 14, "PUMP-01 [99.1%]", rgba(110, 160, 100, 220));
     }
 
@@ -997,29 +1025,27 @@ function renderMain3DScene() {
             renderCrashCart(bot, isBotSelected);
         }
 
-        // Active AMR Neural Perception Overlays (NVIDIA DRIVE Sim)
-        if (showNeuralPerception) {
+        // Focused Perception: Only render active DRIVE Sim overlays on the SELECTED robot!
+        // This keeps the scene crisp and clean, identical to NVIDIA DRIVE Sim videos!
+        if (showNeuralPerception && (isBotSelected || (selectedPrimIdx >= robots.length && idx === 0))) {
             drawAIPerceptionBox(bot.x, 6.0, bot.z, 12, 10, 16, bot.id + " [" + bot.aiConfidence + "]", bot.color);
-
-            if (isBotSelected || idx === 0) {
-                renderLiDARPointCloud(bot);
-                renderCameraFrustum(bot);
-                renderTrajectoryRibbon(bot);
-            }
+            renderLiDARPointCloud(bot);
+            renderCameraFrustum(bot);
+            renderTrajectoryRibbon(bot);
         }
 
-        // 3D Interactive Transform Gizmo on Selected Robot
+        // 3D Interactive Transform Gizmo on Selected Item
         if (isBotSelected && showGizmo) {
             renderTransformGizmo(bot.x, 10.5, bot.z);
         }
     });
 
-    // 6. Floating Atmosphere Dust Particles
+    // 6. Floating Ambient Dust Particles
     for (var pi = 0; pi < particles.length; pi++) {
         var p = particles[pi];
         var ppt = project3D(p.x, p.y, p.z);
         if (ppt) {
-            Screen.draw_rectangle(ppt.x, ppt.y, 2, 2, rgba(200, 215, 235, p.bright));
+            Screen.draw_rectangle(ppt.x, ppt.y, 2, 2, rgba(210, 225, 245, p.bright));
         }
     }
 
@@ -1058,7 +1084,7 @@ function renderMain3DScene() {
 }
 
 // -----------------------------------------------------------------------------
-// DEDICATED PREDEFINED 3D MODEL PREVIEWER (SOLID SHADED TURNTABLE)
+// DEDICATED PREDEFINED 3D MODEL PREVIEWER (TURNTABLE ON SIDE PANEL)
 // -----------------------------------------------------------------------------
 function projectTurntable(lx, ly, lz, angle) {
     var cosA = Math.cos(angle), sinA = Math.sin(angle);
@@ -1085,34 +1111,41 @@ function drawSolidPreviewBox(cx, cy, cz, sx, sy, sz, angle, baseColor) {
     var v6 = projectTurntable(cx+hx, cy+hy, cz+hz, angle);
     var v7 = projectTurntable(cx-hx, cy+hy, cz+hz, angle);
 
+    if (!v0 || !v1 || !v2 || !v3 || !v4 || !v5 || !v6 || !v7) return;
+
     var tcY = 0.3429, tcZ = 0.9394;
     var fc = 0;
     var fv = [];
 
+    // Top
     if (v4 && v5 && v6 && v7) {
-        var br = 0.35 + 0.85 * 0.65;
+        var br = 0.40 + 0.85 * 0.60;
         var dp = (v4.depth + v5.depth + v6.depth + v7.depth) * 0.25;
-        fv[fc++] = {a:v7,b:v6,c:v5,d:v4,br:br,dp:dp};
+        fv[fc++] = {a:v4, b:v5, c:v6, d:v7, br:br, dp:dp};
     }
+    // Front (+Z)
     if (cosA * tcZ > 0 && v3 && v2 && v6 && v7) {
-        var br = 0.25 + Math.max(0, sinA * LIGHT_X + cosA * LIGHT_Z) * 0.65;
+        var br = 0.28 + Math.max(0, sinA * LIGHT_X + cosA * LIGHT_Z) * 0.65;
         var dp = (v3.depth + v2.depth + v6.depth + v7.depth) * 0.25;
-        fv[fc++] = {a:v3,b:v2,c:v6,d:v7,br:br,dp:dp};
+        fv[fc++] = {a:v3, b:v2, c:v6, d:v7, br:br, dp:dp};
     }
+    // Back (-Z)
     if (-cosA * tcZ > 0 && v0 && v1 && v5 && v4) {
-        var br = 0.25 + Math.max(0, -sinA * LIGHT_X - cosA * LIGHT_Z) * 0.65;
+        var br = 0.28 + Math.max(0, -sinA * LIGHT_X - cosA * LIGHT_Z) * 0.65;
         var dp = (v0.depth + v1.depth + v5.depth + v4.depth) * 0.25;
-        fv[fc++] = {a:v4,b:v5,c:v1,d:v0,br:br,dp:dp};
+        fv[fc++] = {a:v0, b:v4, c:v5, d:v1, br:br, dp:dp};
     }
+    // Right (+X)
     if (-sinA * tcZ > 0 && v1 && v2 && v6 && v5) {
-        var br = 0.25 + Math.max(0, cosA * LIGHT_X - sinA * LIGHT_Z) * 0.65;
+        var br = 0.28 + Math.max(0, cosA * LIGHT_X - sinA * LIGHT_Z) * 0.65;
         var dp = (v1.depth + v2.depth + v6.depth + v5.depth) * 0.25;
-        fv[fc++] = {a:v5,b:v6,c:v2,d:v1,br:br,dp:dp};
+        fv[fc++] = {a:v1, b:v5, c:v6, d:v2, br:br, dp:dp};
     }
+    // Left (-X)
     if (sinA * tcZ > 0 && v0 && v3 && v7 && v4) {
-        var br = 0.25 + Math.max(0, -cosA * LIGHT_X + sinA * LIGHT_Z) * 0.65;
+        var br = 0.28 + Math.max(0, -cosA * LIGHT_X + sinA * LIGHT_Z) * 0.65;
         var dp = (v0.depth + v3.depth + v7.depth + v4.depth) * 0.25;
-        fv[fc++] = {a:v0,b:v3,c:v7,d:v4,br:br,dp:dp};
+        fv[fc++] = {a:v0, b:v3, c:v7, d:v4, br:br, dp:dp};
     }
 
     for (var i = 1; i < fc; i++) {
@@ -1128,9 +1161,8 @@ function drawSolidPreviewBox(cx, cy, cz, sx, sy, sz, angle, baseColor) {
         var fr = Math.min(255, (bR * f.br) | 0);
         var fg = Math.min(255, (bG * f.br) | 0);
         var fb = Math.min(255, (bB * f.br) | 0);
-        fillQuad(f.a.x, f.a.y, f.b.x, f.b.y, f.c.x, f.c.y, f.d.x, f.d.y,
-                 rgba(fr, fg, fb, 255), pcX0, pcY0, pcX1, pcY1);
-        var eCol = rgba(Math.min(255,fr+30), Math.min(255,fg+30), Math.min(255,fb+30), 255);
+        fillQuad(f.a, f.b, f.c, f.d, rgba(fr, fg, fb, 255), pcX0, pcY0, pcX1, pcY1);
+        var eCol = rgba(Math.min(255, fr + 26), Math.min(255, fg + 26), Math.min(255, fb + 26), 255);
         Screen.draw_line(f.a.x, f.a.y, f.b.x, f.b.y, eCol);
         Screen.draw_line(f.b.x, f.b.y, f.c.x, f.c.y, eCol);
         Screen.draw_line(f.c.x, f.c.y, f.d.x, f.d.y, eCol);
@@ -1139,7 +1171,6 @@ function drawSolidPreviewBox(cx, cy, cz, sx, sy, sz, angle, baseColor) {
 }
 
 function renderSideModelPreview(model) {
-    // 3D Turntable ring at base
     var numPoints = 16;
     var rad = 14.0;
     var prevPt = null;
@@ -1203,7 +1234,7 @@ function renderNeuralNetworkHUD(rPaneX, rPaneW) {
         { name: "Action", x: rPaneX + 232, count: 3, labels: ["v_spd", "w_steer", "P_conf"] }
     ];
 
-    // Synaptic Weight Connections & Pulsing Signals
+    // Synaptic Connections & Pulsing Signals
     for (var l = 0; l < layers.length - 1; l++) {
         var lA = layers[l];
         var lB = layers[l + 1];
@@ -1258,7 +1289,7 @@ function render() {
     Screen.draw_rectangle(0, 0, 960, 22, OMNI_DARKEST);
     Screen.draw_line(0, 22, 960, 22, OMNI_BORDER);
 
-    // NVIDIA Omniverse Signature Green Hexagon Logo
+    // NVIDIA Omniverse Green Hexagon Logo
     Screen.draw_rectangle(8, 5, 12, 12, NV_GREEN);
     Screen.draw_rectangle(11, 8, 6, 6, OMNI_DARKEST);
 
@@ -1334,7 +1365,6 @@ function render() {
     });
 
     // 5. MAIN 3D PERSPECTIVE VIEWPORT (X: 32 to 665, Y: 58 to 390)
-    Screen.draw_rectangle(VP_X, VP_Y, VP_W, VP_H, rgba(16, 17, 18, 255));
     renderMain3DScene();
 
     Screen.draw_line(VP_X, VP_Y, VP_X + VP_W, VP_Y, OMNI_BORDER);
@@ -1501,7 +1531,6 @@ function render() {
     Screen.draw_rectangle(0, 522, 960, 22, OMNI_DARKEST);
     Screen.draw_line(0, 522, 960, 522, OMNI_BORDER);
 
-    // Timeline Scrubber
     drawText(12, 538, "[>] 00142 / 00240", 10, NV_GREEN);
     Screen.draw_line(125, 524, 125, 542, OMNI_BORDER);
 
@@ -1684,7 +1713,7 @@ function handleInput() {
         if (sideTab === "models") {
             var spawnedModel = predefinedModels[selectedModelIdx];
             addLog("[Spawn] Instantiated: " + spawnedModel.name);
-            targetX = 0; targetY = 10; targetZ = 0;
+            targetX = 0; targetY = 8; targetZ = 0;
         } else {
             var bot = robots[selectedPrimIdx % robots.length];
             var mission = availableMissions[selectedMissionIdx];
@@ -1738,7 +1767,7 @@ function handleInput() {
         orbitPitch = 0.45;
         camDist = 185.0;
         targetX = 0.0;
-        targetY = 10.0;
+        targetY = 8.0;
         targetZ = 0.0;
         addLog("[Camera] Reset to Default View");
     }
