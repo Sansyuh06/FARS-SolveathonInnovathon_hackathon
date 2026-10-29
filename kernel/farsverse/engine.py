@@ -101,6 +101,19 @@ class SimulationEngine:
                 )
                 self.humans.append(human)
 
+            # Seed initial autonomous tasks so robots are navigating from frame 1
+            initial_dests = ["Reception", "MainHall", "Pharmacy", "WaitingHall"]
+            for d in initial_dests[:min(2, robot_count)]:
+                if d in self.world.nodes:
+                    self.task_manager.create_task(
+                        task_type="patrol_hospital",
+                        location_node=d,
+                        priority=1,
+                        description=f"Autonomous patrol & inspection -> {d}",
+                        origin="autonomous_fleet"
+                    )
+            self.task_manager.schedule(self.robots, self.world, self.events)
+
             self.add_event("INFO", "system", f"Initialized FARSverse '{self.world.name}' with {len(self.robots)} robots and {len(self.humans)} agents.")
 
     def add_event(self, severity: str, category: str, message: str) -> None:
@@ -152,6 +165,22 @@ class SimulationEngine:
                 else:
                     human.needs_help = False
                     human.status = "resting" if human.agent_type == "patient" else "walking"
+
+        # 1b. Ambient hospital fleet patrol to keep robots dynamically active
+        self._ambient_timer = getattr(self, '_ambient_timer', 0.0) + dt
+        if self._ambient_timer >= 5.0:
+            self._ambient_timer = 0.0
+            idle_free = [r for r in self.robots if r.is_available() and r.state in ("IDLE", "CHARGING")]
+            if idle_free and len(self.task_manager.task_queue) < 2:
+                dest_candidates = ["Reception", "WaitingHall", "Pharmacy", "EmergencyRoom", "MainHall", "Room1", "Room6", "ICU1"]
+                target_dest = random.choice([d for d in dest_candidates if d in self.world.nodes])
+                self.task_manager.create_task(
+                    task_type="patrol_hospital",
+                    location_node=target_dest,
+                    priority=1,
+                    description=f"Routine patrol & equipment check -> {target_dest}",
+                    origin="autonomous_fleet"
+                )
 
         # 2. Autonomous Task Scheduler matches tasks to available robots
         self.task_manager.schedule(self.robots, self.world, collected_events)
@@ -308,6 +337,24 @@ class SimulationEngine:
                     self.add_event("INFO", "control", "Simulation automatically set to RUNNING for command execution.")
 
         return parsed
+
+    def teleop_robot(self, robot_id: str, linear: float, angular: float) -> bool:
+        """Direct teleoperation steering for a specific robot."""
+        with self._lock:
+            clean = str(robot_id).lower().strip()
+            target = None
+            for r in self.robots:
+                if r.id.lower() == clean or r.name.lower() == clean:
+                    target = r
+                    break
+            if not target and self.robots:
+                target = self.robots[0]
+            if target:
+                target.teleop(linear, angular, self.world)
+                if self.status != "RUNNING":
+                    self.status = "RUNNING"
+                return True
+        return False
 
     # ------------------------------------------------------------------
     #  State Snapshot for Frontend Viewport & WebSockets

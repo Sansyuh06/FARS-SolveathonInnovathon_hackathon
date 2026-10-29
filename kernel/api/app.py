@@ -99,6 +99,12 @@ class RobotUpdateRequest(BaseModel):
     robot_type: Optional[str] = None
 
 
+class TeleopRequest(BaseModel):
+    robot_id: str = "FARS-01"
+    linear: float = 0.0
+    angular: float = 0.0
+
+
 # Authoritative Global Simulation Engine Singleton
 _global_engine: Optional[SimulationEngine] = None
 
@@ -213,6 +219,11 @@ def create_app(db, analytics, access, device_hub, bus, state) -> FastAPI:
         result = engine.execute_command(cmd)
         return result
 
+    @app.post("/api/farsverse/teleop")
+    async def farsverse_teleop(req: TeleopRequest):
+        ok = engine.teleop_robot(req.robot_id, req.linear, req.angular)
+        return {"status": "ok" if ok else "not_found", "robot_id": req.robot_id}
+
     @app.post("/api/farsverse/tasks")
     async def farsverse_create_task(req: TaskCreateRequest):
         task = engine.task_manager.create_task(
@@ -222,6 +233,9 @@ def create_app(db, analytics, access, device_hub, bus, state) -> FastAPI:
             description=req.description or f"Manual {req.task_type} at {req.location}",
             origin="manual"
         )
+        if engine.status != "RUNNING":
+            engine.play()
+        engine.task_manager.schedule(engine.robots, engine.world, engine.events)
         engine.add_event("INFO", "task", f"Manual Task #{task.id} created for {req.location}.")
         return task.to_dict()
 
@@ -407,6 +421,12 @@ def create_app(db, analytics, access, device_hub, bus, state) -> FastAPI:
                         engine.set_speed(float(data.get("speed", 1.0)))
                     elif action == "command":
                         engine.execute_command(data.get("text", ""))
+                    elif action in ("teleop", "drive"):
+                        engine.teleop_robot(
+                            data.get("robot_id", "FARS-01"),
+                            float(data.get("linear", 0.0)),
+                            float(data.get("angular", 0.0))
+                        )
                     elif action == "create_task":
                         engine.task_manager.create_task(
                             task_type=data.get("task_type", "assist_patient"),

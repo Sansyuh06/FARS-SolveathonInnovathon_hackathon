@@ -57,7 +57,7 @@ export function BottomConsole({ snapshot, onSelectEntity, onOpenAITaskPortal, on
   const tasksActive = snapshot?.tasks.active || [];
   const tasksPending = snapshot?.tasks.pending || [];
   const events = snapshot?.events || [];
-  const metrics = snapshot?.metrics || [];
+  const metrics = (snapshot as any)?.metrics || snapshot?.metrics_history || [];
 
   const filteredEvents = events.filter((ev) => {
     if (eventFilter !== "ALL" && ev.severity !== eventFilter) return false;

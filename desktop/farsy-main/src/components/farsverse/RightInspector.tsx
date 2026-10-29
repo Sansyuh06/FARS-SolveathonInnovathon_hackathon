@@ -13,7 +13,7 @@ import {
   Zap,
   Bot
 } from "lucide-react";
-import { FARSverseSnapshot, createManualTask, toggleObstacle, updateRobot } from "@/lib/farsverse-api";
+import { FARSverseSnapshot, createManualTask, sendNaturalCommand, toggleObstacle, updateRobot } from "@/lib/farsverse-api";
 
 interface RightInspectorProps {
   snapshot: FARSverseSnapshot | null;
@@ -52,7 +52,7 @@ export function RightInspector({
   const handleManualDispatch = async (targetNode: string) => {
     if (!robot) return;
     try {
-      await createManualTask("assist_patient", targetNode, 3, `Manual dispatch ${robot.id} to ${targetNode}`);
+      await sendNaturalCommand(`dispatch ${robot.id} to ${targetNode}`);
     } catch (e) {
       console.error(e);
     }
@@ -215,7 +215,25 @@ export function RightInspector({
 
                   {/* Manual Target Selector */}
                   <div className="border-t border-[#222634] pt-2.5 space-y-2">
-                    <label className="text-[10px] text-[#64748b] block font-bold uppercase">Manual Target Dispatch:</label>
+                    <label className="text-[10px] text-[#64748b] block font-bold uppercase">Quick Destination Dispatch:</label>
+                    <div className="grid grid-cols-2 gap-1.5 mb-2">
+                      {[
+                        { label: "Reception", id: "Reception" },
+                        { label: "Pharmacy", id: "Pharmacy" },
+                        { label: "Emergency", id: "EmergencyRoom" },
+                        { label: "Docking", id: "ChargingDock" },
+                      ].map((item) => (
+                        <button
+                          key={item.id}
+                          onClick={() => handleManualDispatch(item.id)}
+                          className="px-2 py-1.5 rounded bg-[#141722] hover:bg-[#76b900] hover:text-black text-white text-[10px] font-bold border border-[#222634] transition-all active:scale-95 text-left"
+                        >
+                          → {item.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    <label className="text-[10px] text-[#64748b] block font-bold uppercase">All Facility Rooms:</label>
                     <div className="flex gap-2">
                       <select
                         value={quickDest}
@@ -228,7 +246,7 @@ export function RightInspector({
                       </select>
                       <button
                         onClick={() => handleManualDispatch(quickDest)}
-                        className="px-3 py-1 rounded bg-white hover:bg-[#e2e8f0] text-black font-bold text-xs"
+                        className="px-3 py-1 rounded bg-[#76b900] hover:bg-[#88d300] text-black font-bold text-xs active:scale-95"
                       >
                         Dispatch
                       </button>

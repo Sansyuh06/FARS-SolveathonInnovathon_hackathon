@@ -216,6 +216,19 @@ export async function sendNaturalCommand(text: string) {
   return res.json();
 }
 
+export async function sendTeleop(robotId: string, linear: number, angular: number) {
+  try {
+    const res = await fetch(`${API_BASE}/api/farsverse/teleop`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ robot_id: robotId, linear, angular }),
+    });
+    return res.json();
+  } catch (e) {
+    return { status: "error" };
+  }
+}
+
 export async function createManualTask(taskType: string, location: string, priority: number = 2, desc: string = "") {
   const res = await fetch(`${API_BASE}/api/farsverse/tasks`, {
     method: "POST",

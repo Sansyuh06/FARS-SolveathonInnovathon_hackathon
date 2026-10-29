@@ -93,6 +93,26 @@ class FARSverseRobot:
         self.decision_trace = reason or f"Assigned to {task.get('description', self.target_node)}. Planned {len(self.waypoints)} waypoints ({path_data.get('distance')}m)."
         return True
 
+    def teleop(self, linear: float, angular: float, world: Any) -> None:
+        """Direct manual drive teleoperation."""
+        self.rotation_y = (self.rotation_y + angular * 12.0) % 360
+        rad = math.radians(self.rotation_y)
+        step = linear * self.speed * 0.45
+        new_x = self.x + math.sin(rad) * step
+        new_z = self.z + math.cos(rad) * step
+
+        # Clamp to bounds
+        self.x = max(-42.0, min(42.0, new_x))
+        self.z = max(-35.0, min(35.0, new_z))
+        self.total_distance += abs(step)
+        self.battery = max(0.0, self.battery - abs(step) * self.drain_rate_moving)
+        self.waypoints = []
+        self.waypoint_index = 0
+        self.state = "NAVIGATING" if (abs(linear) > 0.05 or abs(angular) > 0.05) else "IDLE"
+        self.target_node = "Manual Teleop"
+        self.destination_name = "Manual Teleop"
+        self.decision_trace = f"Manual teleoperation: linear={linear:+.1f}, angular={angular:+.1f}"
+
     def update(self, dt: float, world: Any, events_collector: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
         """Advance the robot simulation state by dt simulation seconds."""
         if dt <= 0.0:

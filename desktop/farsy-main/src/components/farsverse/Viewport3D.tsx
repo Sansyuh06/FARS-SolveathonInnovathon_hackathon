@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { FARSverseSnapshot } from "@/lib/farsverse-api";
+import { FARSverseSnapshot, sendTeleop } from "@/lib/farsverse-api";
 
 interface Viewport3DProps {
   snapshot: FARSverseSnapshot | null;
@@ -130,6 +130,77 @@ export function Viewport3D({
       cameraRef.current.position.set(0, 56, 48);
     }
   };
+
+  const isRobotSelected = selectedEntity?.type === "robot";
+
+  const handleDirUp = () => {
+    if (isRobotSelected && selectedEntity) {
+      sendTeleop(selectedEntity.id, 1.0, 0.0);
+    } else {
+      handlePan(0, -6);
+    }
+  };
+
+  const handleDirDown = () => {
+    if (isRobotSelected && selectedEntity) {
+      sendTeleop(selectedEntity.id, -1.0, 0.0);
+    } else {
+      handlePan(0, 6);
+    }
+  };
+
+  const handleDirLeft = () => {
+    if (isRobotSelected && selectedEntity) {
+      sendTeleop(selectedEntity.id, 0.0, -1.0);
+    } else {
+      handlePan(-6, 0);
+    }
+  };
+
+  const handleDirRight = () => {
+    if (isRobotSelected && selectedEntity) {
+      sendTeleop(selectedEntity.id, 0.0, 1.0);
+    } else {
+      handlePan(6, 0);
+    }
+  };
+
+  const handleDirCenter = () => {
+    if (isRobotSelected && selectedEntity) {
+      sendTeleop(selectedEntity.id, 0.0, 0.0);
+    }
+    handleResetView();
+  };
+
+  // Real-time Robot Teleoperation with WASD / Arrow Keys
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (selectedEntity?.type !== "robot") return;
+      const tag = (document.activeElement?.tagName || "").toLowerCase();
+      if (tag === "input" || tag === "textarea" || tag === "select") return;
+
+      const robotId = selectedEntity.id;
+      if (e.key === "w" || e.key === "W" || e.key === "ArrowUp") {
+        e.preventDefault();
+        sendTeleop(robotId, 1.0, 0.0);
+      } else if (e.key === "s" || e.key === "S" || e.key === "ArrowDown") {
+        e.preventDefault();
+        sendTeleop(robotId, -1.0, 0.0);
+      } else if (e.key === "a" || e.key === "A" || e.key === "ArrowLeft") {
+        e.preventDefault();
+        sendTeleop(robotId, 0.0, -1.0);
+      } else if (e.key === "d" || e.key === "D" || e.key === "ArrowRight") {
+        e.preventDefault();
+        sendTeleop(robotId, 0.0, 1.0);
+      } else if (e.key === " " || e.key === "Escape") {
+        e.preventDefault();
+        sendTeleop(robotId, 0.0, 0.0);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedEntity]);
 
   // ------------------------------------------------------------------
   // 1. Initialize FARS Three.js Studio Scene
@@ -1033,6 +1104,14 @@ export function Viewport3D({
       {/* Right Floating: On-Screen Navigation & Pan/Zoom Controls      */}
       {/* ------------------------------------------------------------- */}
       <div className="absolute right-4 bottom-12 z-20 flex flex-col items-center gap-1.5 bg-[#141720]/90 backdrop-blur-md border border-white/10 p-2 rounded-lg shadow-2xl">
+        {/* Robot Teleoperation Indicator */}
+        {isRobotSelected && (
+          <div className="w-full bg-[#76b900]/20 border border-[#76b900]/40 rounded px-1.5 py-1 text-center">
+            <div className="text-[10px] font-bold text-[#76b900] tracking-wide">🎮 DRIVE {selectedEntity?.id}</div>
+            <div className="text-[8px] text-white/70">WASD or click arrows</div>
+          </div>
+        )}
+
         {/* Navigation Mode Switcher */}
         <div className="flex flex-col gap-1 w-full pb-1.5 border-b border-white/10">
           <button
@@ -1059,43 +1138,59 @@ export function Viewport3D({
           </button>
         </div>
 
-        {/* Pan Directional Pad */}
+        {/* Directional Pad (Drives Robot if selected, otherwise Pans Viewport) */}
         <div className="grid grid-cols-3 gap-1 py-1">
           <div />
           <button
-            onClick={() => handlePan(0, -6)}
-            title="Pan North (Forward)"
-            className="w-7 h-7 bg-white/5 hover:bg-white hover:text-black rounded flex items-center justify-center text-xs text-white/70 border border-white/10 transition-all active:scale-95"
+            onClick={handleDirUp}
+            title={isRobotSelected ? "Drive Forward (W / Up)" : "Pan North (Forward)"}
+            className={`w-7 h-7 rounded flex items-center justify-center text-xs border transition-all active:scale-95 ${
+              isRobotSelected
+                ? "bg-[#76b900]/30 text-white hover:bg-[#76b900] hover:text-black border-[#76b900]/50"
+                : "bg-white/5 hover:bg-white hover:text-black text-white/70 border-white/10"
+            }`}
           >
             ▲
           </button>
           <div />
           <button
-            onClick={() => handlePan(-6, 0)}
-            title="Pan West (Left)"
-            className="w-7 h-7 bg-white/5 hover:bg-white hover:text-black rounded flex items-center justify-center text-xs text-white/70 border border-white/10 transition-all active:scale-95"
+            onClick={handleDirLeft}
+            title={isRobotSelected ? "Steer Left (A / Left)" : "Pan West (Left)"}
+            className={`w-7 h-7 rounded flex items-center justify-center text-xs border transition-all active:scale-95 ${
+              isRobotSelected
+                ? "bg-[#76b900]/30 text-white hover:bg-[#76b900] hover:text-black border-[#76b900]/50"
+                : "bg-white/5 hover:bg-white hover:text-black text-white/70 border-white/10"
+            }`}
           >
             ◀
           </button>
           <button
-            onClick={handleResetView}
-            title="Fit / Center View"
+            onClick={handleDirCenter}
+            title={isRobotSelected ? "Stop Robot (Space) / Center View" : "Fit / Center View"}
             className="w-7 h-7 bg-white text-black font-bold rounded flex items-center justify-center text-[10px] border border-white transition-all active:scale-95"
           >
             ⛶
           </button>
           <button
-            onClick={() => handlePan(6, 0)}
-            title="Pan East (Right)"
-            className="w-7 h-7 bg-white/5 hover:bg-white hover:text-black rounded flex items-center justify-center text-xs text-white/70 border border-white/10 transition-all active:scale-95"
+            onClick={handleDirRight}
+            title={isRobotSelected ? "Steer Right (D / Right)" : "Pan East (Right)"}
+            className={`w-7 h-7 rounded flex items-center justify-center text-xs border transition-all active:scale-95 ${
+              isRobotSelected
+                ? "bg-[#76b900]/30 text-white hover:bg-[#76b900] hover:text-black border-[#76b900]/50"
+                : "bg-white/5 hover:bg-white hover:text-black text-white/70 border-white/10"
+            }`}
           >
             ▶
           </button>
           <div />
           <button
-            onClick={() => handlePan(0, 6)}
-            title="Pan South (Backward)"
-            className="w-7 h-7 bg-white/5 hover:bg-white hover:text-black rounded flex items-center justify-center text-xs text-white/70 border border-white/10 transition-all active:scale-95"
+            onClick={handleDirDown}
+            title={isRobotSelected ? "Drive Reverse (S / Down)" : "Pan South (Backward)"}
+            className={`w-7 h-7 rounded flex items-center justify-center text-xs border transition-all active:scale-95 ${
+              isRobotSelected
+                ? "bg-[#76b900]/30 text-white hover:bg-[#76b900] hover:text-black border-[#76b900]/50"
+                : "bg-white/5 hover:bg-white hover:text-black text-white/70 border-white/10"
+            }`}
           >
             ▼
           </button>
