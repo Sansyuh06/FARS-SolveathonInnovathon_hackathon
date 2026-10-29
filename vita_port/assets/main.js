@@ -5,6 +5,27 @@
 
 const font = Font.load_font_file("app0:/assets/segoeui.ttf");
 
+// Initialize PS Vita Analog Controller Sampling Mode (Left & Right sticks)
+try {
+    if (typeof Pads !== "undefined" && typeof Pads.setSamplingMode === "function") {
+        Pads.setSamplingMode(Pads.MODE_ANALOG_WIDE !== undefined ? Pads.MODE_ANALOG_WIDE : 2);
+    }
+} catch (e) {}
+
+// Helper: Normalize PS Vita / Vita3K analog stick axis with deadzone
+// Sony SceCtrlData gives uint8 (0..255) with 128 resting center
+function getAxisDelta(rawVal) {
+    if (typeof rawVal !== "number") return 0;
+    if (rawVal >= 0 && rawVal <= 255) {
+        var diff = rawVal - 128;
+        if (Math.abs(diff) < 22) return 0; // 22-unit deadzone against drift
+        return Math.max(-1.0, Math.min(1.0, diff / 128.0));
+    }
+    // If runtime already provides signed values (-128..127) centered at 0:
+    if (Math.abs(rawVal) < 22) return 0;
+    return Math.max(-1.0, Math.min(1.0, rawVal / 128.0));
+}
+
 // Helper: 32-bit RGBA color for Vita2D hardware
 function rgba(r, g, b, a) {
     if (a === undefined) a = 255;
@@ -1030,6 +1051,13 @@ function renderMain3DScene() {
     drawText(tripodCX + tz_x + 2, tripodCY - tz_y - 4, "Z", 10, rgba(50, 140, 255, 255));
 
     drawText(tripodCX - 12, tripodCY + 14, "cm [grid]", 9, TEXT_DIM);
+
+    // 8. Viewport Camera HUD Overlay
+    var camDeg = ((orbitYaw * 180 / Math.PI) % 360);
+    if (camDeg < 0) camDeg += 360;
+    var pitchDeg = (orbitPitch * 180 / Math.PI).toFixed(0);
+    drawText(VP_X + 8, VP_Y + 12, "Cam: Orbit " + camDeg.toFixed(0) + "° | Pitch " + pitchDeg + "° | Pos (" + camX.toFixed(0) + ", " + camY.toFixed(0) + ", " + camZ.toFixed(0) + ")", 9, TEXT_MUTED);
+    drawText(VP_X + 8, VP_Y + 23, "Controls: [R-Stick/IJKL] Orbit | [L-Stick/WASD] Pan Target | [Touch] Orbit", 9, rgba(118, 185, 0, 200));
 }
 
 // -----------------------------------------------------------------------------
@@ -1473,28 +1501,69 @@ function justPressed(btn) {
     return isDown && !wasDown;
 }
 
+var lastTouchX = -1, lastTouchY = -1;
+var isTouching = false;
+
+function handleTouch() {
+    try {
+        if (typeof Touch === "undefined" || typeof Touch.peek !== "function") return;
+        var tData = Touch.peek(0);
+        if (tData && tData.count > 0 && tData.touches && tData.touches.length > 0) {
+            var t0 = tData.touches[0];
+            var tx = (t0.x > 960) ? Math.floor(t0.x * 960 / 1920) : t0.x;
+            var ty = (t0.y > 544) ? Math.floor(t0.y * 544 / 1088) : t0.y;
+
+            if (tx >= VP_X && tx <= VP_X + VP_W && ty >= VP_Y && ty <= VP_Y + VP_H) {
+                if (isTouching && lastTouchX >= 0) {
+                    var dX = tx - lastTouchX;
+                    var dY = ty - lastTouchY;
+                    orbitYaw += dX * 0.008;
+                    orbitPitch = Math.max(0.08, Math.min(1.48, orbitPitch - dY * 0.008));
+                }
+                lastTouchX = tx;
+                lastTouchY = ty;
+                isTouching = true;
+                return;
+            }
+        }
+    } catch (e) {}
+    isTouching = false;
+    lastTouchX = -1;
+    lastTouchY = -1;
+}
+
 function handleInput() {
+    handleTouch();
     var pad = Pads.read();
 
-    // 1. Right Stick: Orbit 3D Camera (Yaw & Pitch)
-    if (Math.abs(pad.rx) > 25) {
-        orbitYaw += (pad.rx / 128.0) * 0.04;
+    // 1. Right Stick (or Vita3K I/J/K/L): Orbit 3D Camera (Yaw & Pitch)
+    var rxNorm = getAxisDelta(pad.rx);
+    var ryNorm = getAxisDelta(pad.ry);
+
+    if (rxNorm !== 0) {
+        orbitYaw += rxNorm * 0.045;
     }
-    if (Math.abs(pad.ry) > 25) {
-        orbitPitch = Math.max(0.12, Math.min(1.45, orbitPitch - (pad.ry / 128.0) * 0.04));
+    if (ryNorm !== 0) {
+        orbitPitch = Math.max(0.08, Math.min(1.48, orbitPitch - ryNorm * 0.035));
     }
 
-    // 2. Left Stick: Pan Camera Target in 3D Space
-    if (Math.abs(pad.lx) > 25) {
-        var panAmount = (pad.lx / 128.0) * 1.5;
-        targetX += Rx * panAmount;
-        targetZ += Rz * panAmount;
+    // 2. Left Stick (or Vita3K W/A/S/D): Pan Camera Target in 3D Space (Smooth Relative Pan)
+    var lxNorm = getAxisDelta(pad.lx);
+    var lyNorm = getAxisDelta(pad.ly);
+
+    var fLen = Math.sqrt(Fx * Fx + Fz * Fz);
+    var fwdX = (fLen > 0.001) ? (Fx / fLen) : 0;
+    var fwdZ = (fLen > 0.001) ? (Fz / fLen) : 1;
+
+    if (lxNorm !== 0 || lyNorm !== 0) {
+        var panSpeed = 2.4;
+        targetX += (Rx * lxNorm - fwdX * lyNorm) * panSpeed;
+        targetZ += (Rz * lxNorm - fwdZ * lyNorm) * panSpeed;
     }
-    if (Math.abs(pad.ly) > 25) {
-        var panAmount = (pad.ly / 128.0) * 1.5;
-        targetX += Fx * panAmount;
-        targetZ += Fz * panAmount;
-    }
+
+    // Camera Zoom In / Out via L2 / R2 triggers (or keys U / O)
+    if (Pads.check(Pads.L2)) camDist = Math.max(45.0, camDist - 2.5);
+    if (Pads.check(Pads.R2)) camDist = Math.min(420.0, camDist + 2.5);
 
     // 3. L1 / R1: Cycle Catalog Models or Stage Prims
     if (justPressed(Pads.L1)) {
