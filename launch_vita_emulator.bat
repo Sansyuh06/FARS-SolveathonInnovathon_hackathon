@@ -8,10 +8,7 @@ echo.
 
 cd /d "%~dp0"
 
-echo [1/2] Installing latest FARSverse_Pocket.vpk into Vita3K...
-"vita_port\vita3k\Vita3K.exe" -z "FARSverse_Pocket.vpk"
-
-echo [2/2] Launching FARSverse Pocket (FARS00001) in Vita3K...
+echo Launching FARSverse Pocket (FARS00001) in Vita3K...
 start "" "vita_port\vita3k\Vita3K.exe" -r FARS00001
 
 echo.
